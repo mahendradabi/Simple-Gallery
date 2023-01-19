@@ -3,10 +3,10 @@ package com.simplemobiletools.gallery.pro.activities
 import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.widget.RelativeLayout
 import android.widget.RemoteViews
 import com.bumptech.glide.signature.ObjectKey
 import com.simplemobiletools.commons.dialogs.ColorPickerDialog
@@ -48,15 +48,18 @@ class WidgetConfigureActivity : SimpleActivity() {
         config_text_color.setOnClickListener { pickTextColor() }
         folder_picker_value.setOnClickListener { changeSelectedFolder() }
         config_image_holder.setOnClickListener { changeSelectedFolder() }
+
+        updateTextColors(folder_picker_holder)
+        val primaryColor = getProperPrimaryColor()
+        config_bg_seekbar.setColors(mTextColor, primaryColor, primaryColor)
+        folder_picker_holder.background = ColorDrawable(getProperBackgroundColor())
+
         folder_picker_show_folder_name.isChecked = config.showWidgetFolderName
         handleFolderNameDisplay()
         folder_picker_show_folder_name_holder.setOnClickListener {
             folder_picker_show_folder_name.toggle()
             handleFolderNameDisplay()
         }
-
-        updateTextColors(folder_picker_holder)
-        folder_picker_holder.background = ColorDrawable(config.backgroundColor)
 
         getCachedDirectories(false, false) {
             mDirectories = it
@@ -75,14 +78,18 @@ class WidgetConfigureActivity : SimpleActivity() {
         config_bg_seekbar.apply {
             progress = (mBgAlpha * 100).toInt()
 
-            onSeekBarChangeListener {
-                mBgAlpha = it / 100f
+            onSeekBarChangeListener { progress ->
+                mBgAlpha = progress / 100f
                 updateBackgroundColor()
             }
         }
         updateBackgroundColor()
 
         mTextColor = config.widgetTextColor
+        if (mTextColor == resources.getColor(R.color.default_widget_text_color) && config.isUsingSystemTheme) {
+            mTextColor = resources.getColor(R.color.you_primary_color, theme)
+        }
+
         updateTextColor()
     }
 
@@ -120,17 +127,17 @@ class WidgetConfigureActivity : SimpleActivity() {
         }
     }
 
-    private fun updateBackgroundColor() {
-        mBgColor = mBgColorWithoutTransparency.adjustAlpha(mBgAlpha)
-        config_save.setBackgroundColor(mBgColor)
-        config_image_holder.setBackgroundColor(mBgColor)
-        config_bg_color.setFillWithStroke(mBgColor, Color.BLACK)
+    private fun updateTextColor() {
+        config_folder_name.setTextColor(mTextColor)
+        config_text_color.setFillWithStroke(mTextColor, mTextColor)
+        config_save.setTextColor(getProperPrimaryColor().getContrastColor())
     }
 
-    private fun updateTextColor() {
-        config_save.setTextColor(mTextColor)
-        config_folder_name.setTextColor(mTextColor)
-        config_text_color.setFillWithStroke(mTextColor, Color.BLACK)
+    private fun updateBackgroundColor() {
+        mBgColor = mBgColorWithoutTransparency.adjustAlpha(mBgAlpha)
+        config_image_holder.background.applyColorFilter(mBgColor)
+        config_bg_color.setFillWithStroke(mBgColor, mBgColor)
+        config_save.backgroundTintList = ColorStateList.valueOf(getProperPrimaryColor())
     }
 
     private fun pickBackgroundColor() {
@@ -152,7 +159,7 @@ class WidgetConfigureActivity : SimpleActivity() {
     }
 
     private fun changeSelectedFolder() {
-        PickDirectoryDialog(this, "", false, true) {
+        PickDirectoryDialog(this, "", false, true, false, true) {
             updateFolderImage(it)
         }
     }
@@ -165,7 +172,7 @@ class WidgetConfigureActivity : SimpleActivity() {
         }
 
         ensureBackgroundThread {
-            val path = directoryDao.getDirectoryThumbnail(folderPath)
+            val path = directoryDB.getDirectoryThumbnail(folderPath)
             if (path != null) {
                 runOnUiThread {
                     val signature = ObjectKey(System.currentTimeMillis().toString())
@@ -178,7 +185,5 @@ class WidgetConfigureActivity : SimpleActivity() {
     private fun handleFolderNameDisplay() {
         val showFolderName = folder_picker_show_folder_name.isChecked
         config_folder_name.beVisibleIf(showFolderName)
-        (config_image.layoutParams as RelativeLayout.LayoutParams).bottomMargin =
-            if (showFolderName) 0 else resources.getDimension(R.dimen.normal_margin).toInt()
     }
 }

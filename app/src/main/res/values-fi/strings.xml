@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Simple Gallery</string>
+    <string name="app_name">Yksinkertainen galleria</string>
     <string name="app_launcher_name">Galleria</string>
     <string name="edit">Muokkaa</string>
     <string name="open_camera">Avaa kamera</string>
     <string name="hidden">(piilotettu)</string>
-    <string name="excluded">(poissuljettu)</string>
+    <string name="excluded">(excluded)</string>
     <string name="pin_folder">Kiinnitä kansio</string>
     <string name="unpin_folder">Poista kiinnitys</string>
     <string name="pin_to_the_top">Kiinnitä ylimmäksi</string>
@@ -15,7 +15,7 @@
     <string name="other_folder">Muu kansio</string>
     <string name="show_on_map">Näytä kartalla</string>
     <string name="unknown_location">Tuntematon sijainti</string>
-    <string name="volume">Äänenvoimakkuus</string>
+    <string name="volume">Tilavuus</string>
     <string name="brightness">Kirkkaus</string>
     <string name="lock_orientation">Lukitse näytön kierto</string>
     <string name="unlock_orientation">Vapauta näytön kierto</string>
@@ -39,6 +39,8 @@
     <string name="set_as_default_folder">Aseta oletushakemistoksi</string>
     <string name="unset_as_default_folder">Älä käytä oletushakemistona</string>
     <string name="reorder_by_dragging">Järjestä kansiot uudelleen vetämällä</string>
+    <string name="reorder_by_dragging_pro">Järjestä kansiot uudelleen vetämällä (Pro)</string>
+    <string name="restore_to_path">Palautetaan kohteeseen \'%s\'</string>
     <!-- Filter -->
     <string name="filter_media">Suodata media</string>
     <string name="images">Kuvat</string>
@@ -50,18 +52,16 @@
     <string name="no_media_with_filters">Mediaa ei löytynyt valituilla suotimilla.</string>
     <string name="change_filters_underlined"><u>Muuta suotimia</u></string>
     <!-- Hide / Exclude -->
-    <string name="hide_folder_description">Tämä piilottaa kansion ja alikansiot lisäämällä \'.nomedia\' tiedoston kansioon. Näet ne valitsemalla \'Näytä piilotetut kansiot\' asetuksissa. Jatketaanko?</string>
-    <string name="exclude">Poissulje</string>
-    <string name="excluded_folders">Poissuljetut kansiot</string>
-    <string name="manage_excluded_folders">Hallitse poissuljettuja kansioita</string>
+    <string name="hide_folder_description">Tämä piilottaa kansion ja alikansiot lisäämällä \'.nomedia\' tiedoston kansioon. Näet ne valitsemalla \'Näytä piilotetut kansiot\' asetuksissa. Jatketaanko\?</string>
     <string name="exclude_folder_description">Tämä poissulkee valitun ja alikansiot vain Simple Gallerysta. Voit hallinnoida poissuljettuja kansioita asetuksista.</string>
-    <string name="exclude_folder_parent">Poissulje yläkansio tämän sijaan?</string>
-    <string name="excluded_activity_placeholder">Kansion poissulkeminen piilottaa kansion alikansioineen vain Simple Galleryssa, ne jäävät näkyviin muihin sovelluksiin.\n\nJos haluat piilottaa kansion myös muissa sovelluksissa, käytä piilota-toimintoa.</string>
-    <string name="remove_all">Poista kaikki</string>
-    <string name="remove_all_description">Poista kaikki kansiot poissuljettujen listasta? Tämä ei poista kansioita.</string>
+    <string name="exclude_folder_parent">Poissulje yläkansio tämän sijaan\?</string>
+    <string name="excluded_activity_placeholder">Kansion poissulkeminen piilottaa kansion alikansioineen vain Simple Galleryssa, ne jäävät näkyviin muihin sovelluksiin.
+\n
+\nJos haluat piilottaa kansion myös muissa sovelluksissa, käytä piilota-toimintoa.</string>
     <string name="hidden_folders">Piilotetut kansiot</string>
     <string name="manage_hidden_folders">Hallitse piilotettuja kansioita</string>
     <string name="hidden_folders_placeholder">Näyttää siltä, että sinulla ei ole kansioita piilotettuna \".nomedia\" -tiedostolla.</string>
+    <string name="hidden_all_files">You have to grant the app All Files access to see hidden files, else it cannot work.</string>
     <!-- Include folders -->
     <string name="include_folders">Sisällytä kansiot</string>
     <string name="manage_included_folders">Hallitse sisällettyjä kansioita</string>
@@ -71,7 +71,6 @@
 \nLisääminen ei poissulje muita kansioita.</string>
     <string name="no_media_add_included">Mediatiedostoja ei löytynyt. Lisää mediatiedostoja sisältävät kansiot manuaalisesti.</string>
     <!-- Resizing -->
-    <string name="resize">Rajaa</string>
     <string name="resize_and_save">Rajaa valinta ja tallenna</string>
     <string name="width">Leveys</string>
     <string name="height">Korkeus</string>
@@ -79,6 +78,8 @@
     <string name="invalid_values">Aseta oikea resoluutio</string>
     <!-- Editor -->
     <string name="editor">Editori</string>
+    <string name="basic_editor">Basic Editor</string>
+    <string name="advanced_editor">Advanced Editor</string>
     <string name="rotate">Käännä</string>
     <string name="invalid_image_path">Virheellinen kuvan polku</string>
     <string name="invalid_video_path">Virheellinen videon polku</string>
@@ -98,6 +99,9 @@
     <string name="rotate_left">Kierrä vasemmalle</string>
     <string name="rotate_right">Kierrä oikealle</string>
     <string name="rotate_one_eighty">Kierrä 180º</string>
+    <string name="transform">Transform</string>
+    <string name="crop">Crop</string>
+    <string name="draw">Draw</string>
     <string name="flip">Käännä</string>
     <string name="flip_horizontally">Käännä vaakasuoraan</string>
     <string name="flip_vertically">Käännä pystysuoraan</string>
@@ -117,9 +121,10 @@
     <string name="home_screen">Aloitusnäyttö</string>
     <string name="lock_screen">Lukitusnäyttö</string>
     <string name="home_and_lock_screen">Aloitusnäyttö ja lukitusnäyttö</string>
+    <string name="allow_changing_aspect_ratio">Salli kuvasuhteen muuttaminen</string>
     <!-- Slideshow -->
     <string name="slideshow">Diaesitys</string>
-    <string name="interval">Aikaväli (sekunteja):</string>
+    <string name="interval">Aikaväli</string>
     <string name="include_photos">Sisällytä Kuvat</string>
     <string name="include_videos">Sisällytä Videot</string>
     <string name="include_gifs">Sisällytä GIFit</string>
@@ -200,9 +205,21 @@
     <string name="show_file_count_brackets">Näytä tiedostojen lukumäärä suluissa</string>
     <string name="show_file_count_none">Älä näytä tiedostojen lukumäärää</string>
     <string name="limit_folder_title">Rajoita pitkät kansioiden nimet yhdelle riville</string>
-    <string name="square">Suorakulmio</string>
+    <string name="square">Neliö</string>
     <string name="rounded_corners">Pyöristetyt kulmat</string>
     <string name="export_favorite_paths">Vie suosikkitiedostojen polut</string>
+    <string name="import_favorite_paths">Import favorite file paths</string>
+    <string name="paths_imported_successfully">Paths imported successfully</string>
+    <string name="media_management_prompt">Varmistaaksesi, että kaikki tiedostotoiminnot toimivat luotettavasti, tee tästä sovelluksesta medianhallintasovellus laitteen asetuksissa.</string>
+    <string name="password_protect_excluded">Suojaa salasanalla pois suljettujen kansioiden näkyvyys</string>
+    <string name="media_management_manual">Jokin meni pieleen, mene laitteesi Asetukset - Sovellukset - Erikoissovellusten käyttöoikeus - Medianhallintasovellukset ja salli tämän sovelluksen hallita mediaa.</string>
+    <string name="media_management_note">Jos uudelleenohjaus ei toimi, siirry laitteesi Asetukset - Sovellukset - Erikoissovellusten käyttöoikeus - Medianhallintasovellukset ja salli tämän sovelluksen hallita mediaa.</string>
+    <string name="media_management_alternative">Jos et halua tehdä sitä, voit myös mennä laitteesi Asetukset - Sovellukset - Erikoissovellusten käyttöoikeus - Medianhallintasovellukset ja sallia tämän sovelluksen hallita mediaa.</string>
+    <string name="alternative_media_access">Alternatively, you can allow accessing media files only. In that case you will not be able to work with hidden files though.</string>
+    <string name="media_only">Media only</string>
+    <string name="all_files">All files</string>
+    <string name="search_all_files">Search all files instead of folders on the main screen</string>
+    <string name="show_all_folders">Show a menu button for toggling Show All Folders Content quickly</string>
     <!-- Setting sections -->
     <string name="thumbnails">Esikatselukuvat</string>
     <string name="fullscreen_media">Täyden näytön media</string>
@@ -210,7 +227,7 @@
     <string name="bottom_actions">Alareunan toiminnot</string>
     <!-- Bottom actions -->
     <string name="manage_bottom_actions">Hallitse näkyviä alarivin toimintoja</string>
-    <string name="toggle_favorite">Suosikkimerkinnän muutos</string>
+    <string name="toggle_favorite">Vaihda suosikki</string>
     <string name="toggle_file_visibility">Tiedoston näkyvyyden muutos</string>
     <!-- New editor strings -->
     <string name="pesdk_transform_button_freeCrop">Vapaa</string>
@@ -262,8 +279,8 @@
     <string name="pesdk_brush_button_delete">Poista</string>
     <string name="pesdk_brush_title_brushColor">Siveltimen väri</string>
     <string name="pesdk_editor_title_name">Editori</string>
-    <string name="pesdk_editor_title_closeEditorAlert">Suljetaanko editori?</string>
-    <string name="pesdk_editor_text_closeEditorAlert">Haluatko varmasti hylätä muutokset?</string>
+    <string name="pesdk_editor_title_closeEditorAlert">Suljetaanko editori\?</string>
+    <string name="pesdk_editor_text_closeEditorAlert">Haluatko varmasti hylätä muutokset\?</string>
     <string name="pesdk_editor_button_closeEditorAlertConfirmation">Kyllä</string>
     <string name="pesdk_editor_button_closeEditorAlertCancelation">Ei</string>
     <string name="pesdk_editor_cancel">Peruuta</string>
@@ -288,7 +305,7 @@
     <string name="pesdk_overlay_title_name">Päällys</string>
     <string name="pesdk_overlay_button_blendModeNormal">Normaali</string>
     <string name="pesdk_overlay_button_blendModeDarken">Tummenna</string>
-    <string name="pesdk_overlay_button_blendModeScreen">Screen</string>
+    <string name="pesdk_overlay_button_blendModeScreen">Näyttö</string>
     <string name="pesdk_overlay_button_blendModeOverlay">Päällys</string>
     <string name="pesdk_overlay_button_blendModeLighten">Valaise</string>
     <string name="pesdk_overlay_button_blendModeMultiply">Monista</string>
@@ -326,100 +343,41 @@
     <string name="pesdk_common_title_pipettableColor">Poimi väri</string>
     <string name="vesdk_video_trim_title_name">Leikkaa</string>
     <!-- FAQ -->
-    <string name="faq_1_title">Miten voin tehdä Simple Gallerystä oletusgalleriasovelluksen?</string>
+    <string name="faq_1_title">Miten voin tehdä Simple Gallerystä oletusgalleriasovelluksen\?</string>
     <string name="faq_1_text">Etsi ensin laitteen asetuksista oletusgalleriasovellus, valitse sen asetuksista \"Avaa oletuksena\" ja valitse \"Poista oletukset\". Seuraavalla kerralla kun avaat kuvan tai videon, pyydetään valitsemaan uusi oletussovellus.</string>
-    <string name="faq_2_title">Lukitsin sovelluksen salasanalla, jonka unohdin. Mitä voin tehdä?</string>
+    <string name="faq_2_title">Lukitsin sovelluksen salasanalla, jonka unohdin. Mitä voin tehdä\?</string>
     <string name="faq_2_text">Tähän on kaksi ratkaisua. Voit joko asentaa sovelluksen uudelleen tai etsiä sovelluksen laitteen asetuksista ja tyhjentää sovelluksen tiedot. Sovelluksen asetukset nollautuvat, mutta mediatiedostoja ei poisteta.</string>
-    <string name="faq_3_title">Kuinka saan albumin näkymään aina ylhäällä?</string>
+    <string name="faq_3_title">Kuinka saan albumin näkymään aina ylhäällä\?</string>
     <string name="faq_3_text">Paina pitkään haluamaasi albumia ja valitse Kiinnitä toimintovalikosta. Voit kiinnittää useita kansiota, kiinnitetyt kansiot järjestetään oletuksena olevalla järjestystavalla.</string>
-    <string name="faq_4_title">Kuinka voin kelata videota nopeasti eteenpäin?</string>
+    <string name="faq_4_title">Kuinka voin kelata videota nopeasti eteenpäin\?</string>
     <string name="faq_4_text">Tuplaklikkaa haluamaasi puolta ruudusta. Voit myös napauttaa hakupalkin vierestä kestoa kuvaavaa tekstiä. Jos käytössä on videoiden avaus erillisellä ruudulla, voit käyttää vaakatasoeleitä.</string>
-    <string name="faq_5_title">Mitä eroa on kansion piilotuksella ja poissululla?</string>
+    <string name="faq_5_title">Mitä eroa on kansion piilotuksella ja poissululla\?</string>
     <string name="faq_5_text">Poissulku piilottaa kansion vain Simple Galleryssä, piilotus taas piilottaa järjestelmänlaajuisesti muistakin galleriasovelluksista. Piilotustoiminto luo kansioon tyhjän \".nomedia\"-tiedoston jonka voi tarvittaessa poistaa millä tahansa tiedostonhallintasovelluksella. Huomioi, että jotkin laitteet eivät salli joidenkin kansioden, kuten Camera, Screenshots ja Downloads, piilotusta.</string>
-    <string name="faq_6_title">Miksi galleriassa näkyy kansioita musiikkialbumien kansitaiteella tai tarroilla?</string>
+    <string name="faq_6_title">Miksi galleriassa näkyy kansioita musiikkialbumien kansitaiteella tai tarroilla\?</string>
     <string name="faq_6_text">Voi olla, että joitain epätavallisia albumeita näytetään. Voit poissulkea ne helposti painamalla pitkään albumia ja valitsemalla Poissulje. Avautuvassa valikossa voit valita yläkansion, jonka poissulku mahdollisesti estää myös muiden epätoivottujen albumien näkymisen.</string>
-    <string name="faq_7_title">Kuvan sisältävä kansio ei näy tai siinä ei näy kaikkia kuvia. Mitä voin tehdä?</string>
+    <string name="faq_7_title">Kuvan sisältävä kansio ei näy tai siinä ei näy kaikkia kuvia. Mitä voin tehdä\?</string>
     <string name="faq_7_text">Tämä voi johtua useasta syystä, mutta ratkaisu on helppoa. Mene asetuksiin -&gt; Hallitse sisällytettyjä kansioita -&gt; Plus-painike -&gt; Navigoi haluaamasi kansioon.</string>
-    <string name="faq_8_title">Mitä jos haluan vain muutaman tietyn kansion näkyviin?</string>
-    <string name="faq_8_text">Kansion lisääminen sisällytettyihin kansioihin ei automaattisesti poissulje muita kansioita. Voit mennä asetuksiin -&gt; Hallitse poissuljettuja kansioita -&gt; poissulje juurikansio \"/\", sen jälkeen lisää haluamasi näytettävät kansiot asetuksien Hallitse sisällytettyjä kansioita-toiminnolla.
-        Siten vain valitut kansiot näytetä. Poissulku ja sisällyttäminen ovat rekursiivisia, mutta jos kansio kuuluu molempiin, se näytetään.</string>
-    <string name="faq_10_title">Voinko rajata kuvia tällä sovelluksella?</string>
+    <string name="faq_8_title">Mitä jos haluan vain muutaman tietyn kansion näkyviin\?</string>
+    <string name="faq_8_text">Kansion lisääminen sisällytettyihin kansioihin ei automaattisesti poissulje muita kansioita. Voit mennä asetuksiin -&gt; Hallitse poissuljettuja kansioita -&gt; poissulje juurikansio \"/\", sen jälkeen lisää haluamasi näytettävät kansiot asetuksien Hallitse sisällytettyjä kansioita-toiminnolla. Siten vain valitut kansiot näytetä. Poissulku ja sisällyttäminen ovat rekursiivisia, mutta jos kansio kuuluu molempiin, se näytetään.</string>
+    <string name="faq_10_title">Voinko rajata kuvia tällä sovelluksella\?</string>
     <string name="faq_10_text">Kyllä, voit rajata kuvia editorissa vetämällä kuvan kulmista. Pääset editoriin joko painamalla pitkään pienoiskuvaa ja valitsemalla Muokkaa, tai valitsemalla Muokkaa koko näytön tilassa.</string>
-    <string name="faq_11_title">Voinko ryhmittää mediatieodostojen pienoiskuvia jotenkin?</string>
+    <string name="faq_11_title">Voinko ryhmittää mediatieodostojen pienoiskuvia jotenkin\?</string>
     <string name="faq_11_text">Jep, käytä vain \"Ryhmitä\"-valintaa pienoiskuvanäkymässä. Voit ryhmittää tiedostoja useilla kriteereillä, kuten kuvanottopäivämäärän mukaan. Jos käytät \"Näytä kansion koko sisältö\" -toimintoa, voit ryhmittää myös kansioiden perusteella.</string>
     <string name="faq_12_title">Lajittelu ottopäivämäärän mukaan ei vaikuta toimivan oikein, kuinka voin korjata ongelman\?</string>
     <string name="faq_12_text">Luultavimmin tämä johtuu siitä, että kuvat on kopioitu. Voit korjata tämän valitsemalla pienoiskuvat ja valitsemalla \"Korjaa kuvanottopäivämäärät\".</string>
-    <string name="faq_13_title">Kuvissa näkyy joitain väriraitoja. Miten voin parantaa laatua?</string>
+    <string name="faq_13_title">Kuvissa näkyy joitain väriraitoja. Miten voin parantaa laatua\?</string>
     <string name="faq_13_text">Nykyinen ratkaisu kuvien näyttämiseen toimii valtaosassa tapauksia hyvin, mutta jos haluat vielä paremman laadun, voit ottaa asetuksissa käyttöön \"Näytä kuvat korkeimmalla mahdollisella laadulla\", joka on \"Syväzoomattavat kuvat\" osiossa.</string>
-    <string name="faq_14_title">Olen piilottanut tiedoston/kansion. Miten saan sen näkyviin?</string>
+    <string name="faq_14_title">Olen piilottanut tiedoston/kansion. Miten saan sen näkyviin\?</string>
     <string name="faq_14_text">Voit joko painaa päänäytön valikosta \"Näytä piilotetut kohteet väliaikaisesti\" tai muuttaa \"Näytä piilotetut kohteet\"-asetusta asetuksissa. Paina sitten piilotettua kohdetta pitkään ja valitse \"Poista piilotus\". FKansiot piilotetaan lisäämällä niihin \".nomedia\" tiedosto, jonka voit poistaa millä tahansa tiedostonhallintasovelluksella. Huomaa, että piilottaminen toimii kuitenkin rekursiivisesti, joten jos piilotat kansion, myös kaikki alikansiot piilotetaan. Joten alikansioiden piilottamiseksi sinun on otettava yläkansion piilotus pois käytöstä.</string>
-    <string name="faq_15_title">Miksi sovellus vie niin paljon tilaa?</string>
+    <string name="faq_15_title">Miksi sovellus vie niin paljon tilaa\?</string>
     <string name="faq_15_text">Välimuisti voi viedä jopa 250 Mt; se varmistaa nopeamman kuvien lataamisen. Jos sovellus vie vielä enemmän tilaa, se johtuu mitä ilmeisemmin roskakorissa olevista kohteista, joiden koko lasketaan sovelluksen kokoon. Voit tyhjentää roskakorin sovelluksen asetuksista tai avaamalla roskakorin sovelluksessa ja poistamalla kohteet. Roskakori tyhjennetään automaattisesti 30 päivän välein.</string>
-    <string name="faq_16_title">What happened to file and folder hiding and why cannot I see hidden items anymore?</string>
-    <string name="faq_16_text">Starting with Android 11 you cannot hide or unhide files or folders anymore, you cannot see the hidden ones in gallery apps either. You will have to use some file manager for that.</string>
-    <string name="faq_17_title">Why cannot I include missing folders anymore?</string>
-    <string name="faq_17_text">That stopped working due to the system changes that came with Android 11 too, the app cannot browse real folders anymore, it relies on the so called MediaStore at fetching data.</string>
-    <!-- Strings displayed only on Google Playstore. Optional, but good to have -->
-    <!-- App title has to have less than 50 characters. If you cannot squeeze it, just remove a part of it -->
-    <string name="app_title">Simple Gallery Pro - Valokuvien selaus ja muokkaus</string>
-    <!-- Short description has to have less than 80 chars -->
-    <string name="app_short_description">Browse your memories without any interruptions with this photo and video gallery</string>
-    <string name="app_long_description">
-        Simple Gallery Pro on laajasti kustomoitava offline-galleria. Organisoi &amp; muokkaa valokuvia, palauta poistettuja tiedostoja roskakorista, suojaa &amp; piilota tiedostoja ja katso useiden eri tiedostomuotojen valokuvia &amp; videoita, mukaanlukien RAW- ja SVG-tiedostot.	
-
-        Sovellus ei sisällä mainoksia eikä se vaadi tarpeettomia käyttöoikeuksia. Yksityisyytesi on turvattu, sillä sovellus ei vaadi myöskään internet-yhteyttä.
-
-        -------------------------------------------------
-        <b>SIMPLE GALLERY PRO – OMINAISUUDET</b>
-        -------------------------------------------------
-
-        • Offline-galleria ilman mainoksia tai ponnahdusilmoituksia
-        • Simple gallery valokuvaeditori – rajaa, kierrä, muuta kokoa, piirrä, lisää suodattimia ja paljon muuta
-        • Internet-yhteyttä ei käytetä, turvallisuutesi ja yksityisyytesi on turvattu
-        • Ei tarpeettomia sovelluksen käyttöoikeuksia
-        • Pikahaku kuville, videoille &amp; tiedostoille
-        • Avaa &amp; katso monen eri tyypin kuvia ja videoita (RAW, SVG, panoraama jne.)
-        • Useita intuitiivisia eleitä tiedostojen organisointiin &amp; muokkaukseen
-        • Monia tapoja suodattaa, ryhmitellä &amp; lajitella tiedostoja
-        • Mukauta Simple Gallery Pro:n ulkoasua
-        • Saatavilla 32 kielellä
-        • Tiedostojen suosikkimerkinnät nopeaa käyttöä varten
-        • Suojaa kuvia &amp; videoita kuviolla, PIN-koodilla tai sormenjäljellä
-        • Käytä PIN-koodia, kuviota tai sormenjälkeä suojaamaan sovelluksen käynnistämisen tai sen toimintoja
-        • Palauta poistettuja valokuvia &amp; videoita roskakorista
-        • Muuta tiedostojen näkyvyyttä piilottaaksesi kuvia &amp; videoita
-        • Luo mukautettava diaesitys tiedostoistasi
-        • Näytä tarkennettua tietoja tiedostoista (tarkkuus, EXIF-arvot jne.)
-        • Simple Gallery Pro on avointa lähdekoodia
-        … ja paljon, paljon muuta!
-
-        <b>PHOTO GALLERY EDITOR</b>
-        Simple Gallery Pro:N avulla kuvien muokkaus lennosta on helppoa. Rajaa, käännä, peilaa ja muuta kuvien kokoa. Jos koet itsesi luovaksi, voit lisätä suodattimia tai piirtää itse kuviin!
-
-        <b>SUPPORT FOR MANY FILE TYPES</b>
-        Useista muista galleriasovelluksista poiketen Simple Gallery Pro tukee laajaa skaalaa eri tiedostotyyppejä, mukaanlukien JPEG, PNG, MP4, MKV, RAW, SVG, panoraamakuvat, panoraamavideot.
-
-        <b>HIGHLY CUSTOMIZABLE GALLERY MANAGER</b>
-        Käyttöliittymästä alarivin toimintopainikkeisiinm Simple Gallery Pro on mukautettavissa ja toimii kuten sinä haluat. Muut galleriasovellukset eivät ole näin joustavia! Kiitos avoimen lähdekoodin, sovellus on saatavilla 32 kielellä!
-
-        <b>RECOVER DELETED PHOTOS &amp; VIDEOS</b>
-        Poistitko vahingossa arvokkaan kuvan tai videon? Ei huolta! Simple Gallery Pro sisältää roskakoritoiminnon, josta voit palauttaa poistetut kuvat ja videot helposti.
-
-        <b>PROTECT &amp; HIDE PHOTOS, VIDEOS &amp; FILES</b>
-        Voit suojata ja piilottaa kuvia ja videoita tai kokonaisia albumeita PIN-koodin, kuvion tai laitteesi sormenjälkitunnistimen avulla. Voit myös suojata koko sovelluksen tai asettaa rajoituksia tiettyihin sovelluksen toimintoihin. Esimerkiksi tiedostot voi suojata vahingossa tapahtuvilta poistamisilta asettamalla sovelluksen vaatimaan sormenjäljen tunnistuksen ennen poistoa.
-
-        <b>Katso koko Simple Tools-sovellusvalikoima täältä:</b>
-        https://www.simplemobiletools.com
-
-        <b>Simple Gallery Pro:n oma sivusto:</b>
-        https://www.simplemobiletools.com/gallery
-
-        <b>Facebook:</b>
-        https://www.facebook.com/simplemobiletools
-
-        <b>Reddit:</b>
-        https://www.reddit.com/r/SimpleMobileTools
-    </string>
+    <string name="faq_16_title">Mitä taphtui tiedostojen ja kansioiden piilotukselle ja miksi en nää enää piilotettuja kohteita\?</string>
+    <string name="faq_16_text">Android 11:stä alkaen ei voi enää piilottaa tai poistaa piilotettuja tiedostoja tai kansioita, eikä näe piilotettuja tiedostoja tai kansioita galleriasovelluksissa järjestelmän rajoitusten vuoksi. On käytettävä jotain tiedostonhallintaohjelmaa siihen.</string>
+    <string name="faq_16_text_extra">Or you can also grant this gallery access to All Files through your device settings, that will allow us showing hidden items and make file operations more reliable in general.</string>
+    <string name="faq_17_title">Miksi en voi enää sisällyttää puuttuvia kansioita\?</string>
+    <string name="faq_17_text">Se lakkasi toimimasta Android 11:n mukana tulleiden järjestelmämuutosten vuoksi. Sovellus ei voi enää selata oikeita kansioita, vaan se luottaa niin sanottuun MediaStoreen tietojen hakemisessa.</string>
+    <string name="faq_18_title">Miksi näen mainoksia videon toiston aikana\?</string>
+    <string name="faq_18_text">Sovelluksissamme ei ole lainkaan mainoksia. Jos näet niitä videon toiston aikana, sinun täytyy käyttää jotain muuta sovellusta videosoittimena. Yritä etsiä oletusarvoinen videosoittimesi laitteen asetuksista ja tee sitten ”Tyhjenä oletusasetukset” sille. Seuraavan kerran, kun kutsut jonkin videon aikomuksen, näet sovelluksen valintakehotuksen, jossa voit valita, mitä sovellusta haluat käyttää.</string>
     <!--
         Haven't found some strings? There's more at
         https://github.com/SimpleMobileTools/Simple-Commons/tree/master/commons/src/main/res

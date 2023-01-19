@@ -7,9 +7,9 @@ import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.view.Menu
-import android.view.MenuItem
+import android.text.Html
 import android.view.View
+import android.widget.RelativeLayout
 import com.simplemobiletools.commons.dialogs.PropertiesDialog
 import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.helpers.*
@@ -36,14 +36,18 @@ open class PhotoVideoActivity : SimpleActivity(), ViewPagerFragment.FragmentList
     var mIsVideo = false
 
     public override fun onCreate(savedInstanceState: Bundle?) {
+        showTransparentTop = true
+        //showTransparentNavigation = true
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.fragment_holder)
-
         if (checkAppSideloading()) {
             return
         }
 
-        handlePermission(PERMISSION_WRITE_STORAGE) {
+        setupOptionsMenu()
+        refreshMenuItems()
+        handlePermission(getPermissionToRequest()) {
             if (it) {
                 checkIntent(savedInstanceState)
             } else {
@@ -55,8 +59,6 @@ open class PhotoVideoActivity : SimpleActivity(), ViewPagerFragment.FragmentList
 
     override fun onResume() {
         super.onResume()
-        supportActionBar?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        window.statusBarColor = Color.TRANSPARENT
 
         if (config.bottomActions) {
             window.navigationBarColor = Color.TRANSPARENT
@@ -69,37 +71,47 @@ open class PhotoVideoActivity : SimpleActivity(), ViewPagerFragment.FragmentList
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.photo_video_menu, menu)
+    fun refreshMenuItems() {
         val visibleBottomActions = if (config.bottomActions) config.visibleBottomActions else 0
 
-        menu.apply {
+        fragment_viewer_toolbar.menu.apply {
             findItem(R.id.menu_set_as).isVisible = mMedium?.isImage() == true && visibleBottomActions and BOTTOM_ACTION_SET_AS == 0
             findItem(R.id.menu_edit).isVisible = mMedium?.isImage() == true && mUri?.scheme == "file" && visibleBottomActions and BOTTOM_ACTION_EDIT == 0
             findItem(R.id.menu_properties).isVisible = mUri?.scheme == "file" && visibleBottomActions and BOTTOM_ACTION_PROPERTIES == 0
             findItem(R.id.menu_share).isVisible = visibleBottomActions and BOTTOM_ACTION_SHARE == 0
             findItem(R.id.menu_show_on_map).isVisible = visibleBottomActions and BOTTOM_ACTION_SHOW_ON_MAP == 0
         }
-
-        updateMenuItemColors(menu)
-        return true
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (mMedium == null || mUri == null) {
-            return true
+    private fun setupOptionsMenu() {
+        (fragment_viewer_appbar.layoutParams as RelativeLayout.LayoutParams).topMargin = statusBarHeight
+        fragment_viewer_toolbar.apply {
+            setTitleTextColor(Color.WHITE)
+            overflowIcon = resources.getColoredDrawableWithColor(R.drawable.ic_three_dots_vector, Color.WHITE)
+            navigationIcon = resources.getColoredDrawableWithColor(R.drawable.ic_arrow_left_vector, Color.WHITE)
         }
 
-        when (item.itemId) {
-            R.id.menu_set_as -> setAs(mUri!!.toString())
-            R.id.menu_open_with -> openPath(mUri!!.toString(), true)
-            R.id.menu_share -> sharePath(mUri!!.toString())
-            R.id.menu_edit -> openEditor(mUri!!.toString())
-            R.id.menu_properties -> showProperties()
-            R.id.menu_show_on_map -> showFileOnMap(mUri!!.toString())
-            else -> return super.onOptionsItemSelected(item)
+        updateMenuItemColors(fragment_viewer_toolbar.menu, forceWhiteIcons = true)
+        fragment_viewer_toolbar.setOnMenuItemClickListener { menuItem ->
+            if (mMedium == null || mUri == null) {
+                return@setOnMenuItemClickListener true
+            }
+
+            when (menuItem.itemId) {
+                R.id.menu_set_as -> setAs(mUri!!.toString())
+                R.id.menu_open_with -> openPath(mUri!!.toString(), true)
+                R.id.menu_share -> sharePath(mUri!!.toString())
+                R.id.menu_edit -> openEditor(mUri!!.toString())
+                R.id.menu_properties -> showProperties()
+                R.id.menu_show_on_map -> showFileOnMap(mUri!!.toString())
+                else -> return@setOnMenuItemClickListener false
+            }
+            return@setOnMenuItemClickListener true
         }
-        return true
+
+        fragment_viewer_toolbar.setNavigationOnClickListener {
+            finish()
+        }
     }
 
     private fun checkIntent(savedInstanceState: Bundle? = null) {
@@ -133,8 +145,9 @@ open class PhotoVideoActivity : SimpleActivity(), ViewPagerFragment.FragmentList
         if (intent.extras?.containsKey(REAL_FILE_PATH) == true) {
             val realPath = intent.extras!!.getString(REAL_FILE_PATH)
             if (realPath != null && getDoesFilePathExist(realPath)) {
-                val avoidShowingHiddenFiles = isRPlus() && File(realPath).isHidden
-                if (!avoidShowingHiddenFiles) {
+                val isFileFolderHidden = (File(realPath).isHidden || File(realPath.getParentPath(), NOMEDIA).exists() || realPath.contains("/."))
+                val preventShowingHiddenFile = (isRPlus() && !isExternalStorageManager()) && isFileFolderHidden
+                if (!preventShowingHiddenFile) {
                     if (realPath.getFilenameFromPath().contains('.') || filename.contains('.')) {
                         if (isFileTypeVisible(realPath)) {
                             bottom_actions.beGone()
@@ -158,19 +171,27 @@ open class PhotoVideoActivity : SimpleActivity(), ViewPagerFragment.FragmentList
             }
             return
         } else {
-            val path = applicationContext.getRealPathFromURI(mUri!!) ?: ""
-            val avoidShowingHiddenFiles = isRPlus() && File(path).isHidden
-            if (!avoidShowingHiddenFiles) {
-                if (path != mUri.toString() && path.isNotEmpty() && mUri!!.authority != "mms" && filename.contains('.') && getDoesFilePathExist(path)) {
-                    if (isFileTypeVisible(path)) {
+            val realPath = applicationContext.getRealPathFromURI(mUri!!) ?: ""
+            val isFileFolderHidden = (File(realPath).isHidden || File(realPath.getParentPath(), NOMEDIA).exists() || realPath.contains("/."))
+            val preventShowingHiddenFile = (isRPlus() && !isExternalStorageManager()) && isFileFolderHidden
+            if (!preventShowingHiddenFile) {
+                if (realPath != mUri.toString() && realPath.isNotEmpty() && mUri!!.authority != "mms" && filename.contains('.') && getDoesFilePathExist(realPath)) {
+                    if (isFileTypeVisible(realPath)) {
                         bottom_actions.beGone()
                         rescanPaths(arrayListOf(mUri!!.path!!))
-                        sendViewPagerIntent(path)
+                        sendViewPagerIntent(realPath)
                         finish()
                         return
                     }
                 }
             }
+        }
+
+        top_shadow.layoutParams.height = statusBarHeight + actionBarHeight
+        if (!portrait && navigationBarOnSide && navigationBarWidth > 0) {
+            fragment_viewer_toolbar.setPadding(0, 0, navigationBarWidth, 0)
+        } else {
+            fragment_viewer_toolbar.setPadding(0, 0, 0, 0)
         }
 
         checkNotchSupport()
@@ -189,7 +210,7 @@ open class PhotoVideoActivity : SimpleActivity(), ViewPagerFragment.FragmentList
 
         mIsVideo = type == TYPE_VIDEOS
         mMedium = Medium(null, filename, mUri.toString(), mUri!!.path!!.getParentPath(), 0, 0, file.length(), type, 0, false, 0L, 0)
-        supportActionBar?.title = mMedium!!.name
+        fragment_viewer_toolbar.title = Html.fromHtml("<font color='${Color.WHITE.toHex()}'>${mMedium!!.name}</font>")
         bundle.putSerializable(MEDIUM, mMedium)
 
         if (savedInstanceState == null) {
@@ -261,6 +282,14 @@ open class PhotoVideoActivity : SimpleActivity(), ViewPagerFragment.FragmentList
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         initBottomActionsLayout()
+
+        top_shadow.layoutParams.height = statusBarHeight + actionBarHeight
+        (fragment_viewer_appbar.layoutParams as RelativeLayout.LayoutParams).topMargin = statusBarHeight
+        if (!portrait && navigationBarOnSide && navigationBarWidth > 0) {
+            fragment_viewer_toolbar.setPadding(0, 0, navigationBarWidth, 0)
+        } else {
+            fragment_viewer_toolbar.setPadding(0, 0, 0, 0)
+        }
     }
 
     private fun sendViewPagerIntent(path: String) {
@@ -276,7 +305,9 @@ open class PhotoVideoActivity : SimpleActivity(), ViewPagerFragment.FragmentList
     }
 
     private fun openViewPager(path: String) {
-        MediaActivity.mMedia.clear()
+        if (!intent.getBooleanExtra(IS_FROM_GALLERY, false)) {
+            MediaActivity.mMedia.clear()
+        }
         runOnUiThread {
             hideKeyboard()
             Intent(this, ViewPagerActivity::class.java).apply {
@@ -381,6 +412,12 @@ open class PhotoVideoActivity : SimpleActivity(), ViewPagerFragment.FragmentList
         if (!bottom_actions.isGone()) {
             bottom_actions.animate().alpha(newAlpha).start()
         }
+
+        fragment_viewer_toolbar.animate().alpha(newAlpha).withStartAction {
+            fragment_viewer_toolbar.beVisible()
+        }.withEndAction {
+            fragment_viewer_toolbar.beVisibleIf(newAlpha == 1f)
+        }.start()
     }
 
     override fun videoEnded() = false

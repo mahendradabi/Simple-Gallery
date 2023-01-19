@@ -9,7 +9,7 @@
     android:focusable="true"
     android:paddingTop="@dimen/medium_margin">
 
-    <com.simplemobiletools.gallery.pro.views.MySquareImageView
+    <com.simplemobiletools.commons.views.MySquareImageView
         android:id="@+id/dir_thumbnail"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
@@ -74,7 +74,7 @@
         android:background="@drawable/circle_black_background"
         android:contentDescription="@string/pin"
         android:padding="@dimen/small_margin"
-        android:src="@drawable/ic_pin"
+        android:src="@drawable/ic_pin_filled_vector"
         android:visibility="gone" />
 
     <TextView

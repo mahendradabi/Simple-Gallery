@@ -13,6 +13,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.util.DisplayMetrics
 import android.view.*
+import android.widget.RelativeLayout
 import android.widget.SeekBar
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
@@ -58,8 +59,12 @@ open class VideoPlayerActivity : SimpleActivity(), SeekBar.OnSeekBarChangeListen
     private var mIgnoreCloseDown = false
 
     public override fun onCreate(savedInstanceState: Bundle?) {
+        showTransparentTop = true
+        //showTransparentNavigation = true
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video_player)
+        setupOptionsMenu()
         setupOrientation()
         checkNotchSupport()
         initPlayer()
@@ -68,7 +73,6 @@ open class VideoPlayerActivity : SimpleActivity(), SeekBar.OnSeekBarChangeListen
     override fun onResume() {
         super.onResume()
         top_shadow.layoutParams.height = statusBarHeight + actionBarHeight
-        supportActionBar?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         window.statusBarColor = Color.TRANSPARENT
         window.navigationBarColor = Color.TRANSPARENT
         if (config.blackBackground) {
@@ -82,6 +86,12 @@ open class VideoPlayerActivity : SimpleActivity(), SeekBar.OnSeekBarChangeListen
         }
 
         updateTextColors(video_player_holder)
+
+        if (!portrait && navigationBarOnSide && navigationBarWidth > 0) {
+            video_toolbar.setPadding(0, 0, navigationBarWidth, 0)
+        } else {
+            video_toolbar.setPadding(0, 0, 0, 0)
+        }
     }
 
     override fun onPause() {
@@ -105,19 +115,28 @@ open class VideoPlayerActivity : SimpleActivity(), SeekBar.OnSeekBarChangeListen
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_video_player, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.menu_change_orientation -> changeOrientation()
-            R.id.menu_open_with -> openPath(mUri!!.toString(), true)
-            R.id.menu_share -> shareMediumPath(mUri!!.toString())
-            else -> return super.onOptionsItemSelected(item)
+    private fun setupOptionsMenu() {
+        (video_appbar.layoutParams as RelativeLayout.LayoutParams).topMargin = statusBarHeight
+        video_toolbar.apply {
+            setTitleTextColor(Color.WHITE)
+            overflowIcon = resources.getColoredDrawableWithColor(R.drawable.ic_three_dots_vector, Color.WHITE)
+            navigationIcon = resources.getColoredDrawableWithColor(R.drawable.ic_arrow_left_vector, Color.WHITE)
         }
-        return true
+
+        updateMenuItemColors(video_toolbar.menu, forceWhiteIcons = true)
+        video_toolbar.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.menu_change_orientation -> changeOrientation()
+                R.id.menu_open_with -> openPath(mUri!!.toString(), true)
+                R.id.menu_share -> shareMediumPath(mUri!!.toString())
+                else -> return@setOnMenuItemClickListener false
+            }
+            return@setOnMenuItemClickListener true
+        }
+
+        video_toolbar.setNavigationOnClickListener {
+            finish()
+        }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -126,6 +145,14 @@ open class VideoPlayerActivity : SimpleActivity(), SeekBar.OnSeekBarChangeListen
         initTimeHolder()
         video_surface_frame.onGlobalLayout {
             video_surface_frame.controller.resetState()
+        }
+
+        top_shadow.layoutParams.height = statusBarHeight + actionBarHeight
+        (video_appbar.layoutParams as RelativeLayout.LayoutParams).topMargin = statusBarHeight
+        if (!portrait && navigationBarOnSide && navigationBarWidth > 0) {
+            video_toolbar.setPadding(0, 0, navigationBarWidth, 0)
+        } else {
+            video_toolbar.setPadding(0, 0, 0, 0)
         }
     }
 
@@ -141,7 +168,7 @@ open class VideoPlayerActivity : SimpleActivity(), SeekBar.OnSeekBarChangeListen
 
     private fun initPlayer() {
         mUri = intent.data ?: return
-        supportActionBar?.title = getFilenameFromUri(mUri!!)
+        video_toolbar.title = getFilenameFromUri(mUri!!)
         initTimeHolder()
 
         showSystemUI(true)
@@ -164,11 +191,8 @@ open class VideoPlayerActivity : SimpleActivity(), SeekBar.OnSeekBarChangeListen
 
 
         val gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onDoubleTap(e: MotionEvent?): Boolean {
-                if (e != null) {
-                    handleDoubleTap(e.rawX)
-                }
-
+            override fun onDoubleTap(e: MotionEvent): Boolean {
+                handleDoubleTap(e.rawX)
                 return true
             }
         })
@@ -459,6 +483,12 @@ open class VideoPlayerActivity : SimpleActivity(), SeekBar.OnSeekBarChangeListen
         arrayOf(video_prev_file, video_next_file, video_curr_time, video_duration).forEach {
             it.isClickable = !mIsFullscreen
         }
+
+        video_appbar.animate().alpha(newAlpha).withStartAction {
+            video_appbar.beVisible()
+        }.withEndAction {
+            video_appbar.beVisibleIf(newAlpha == 1f)
+        }.start()
     }
 
     private fun initTimeHolder() {
@@ -514,15 +544,15 @@ open class VideoPlayerActivity : SimpleActivity(), SeekBar.OnSeekBarChangeListen
     private fun handleEvent(event: MotionEvent) {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
-                mTouchDownX = event.x
-                mTouchDownY = event.y
+                mTouchDownX = event.rawX
+                mTouchDownY = event.rawY
                 mTouchDownTime = System.currentTimeMillis()
                 mProgressAtDown = mExoPlayer!!.currentPosition
             }
             MotionEvent.ACTION_POINTER_DOWN -> mIgnoreCloseDown = true
             MotionEvent.ACTION_MOVE -> {
-                val diffX = event.x - mTouchDownX
-                val diffY = event.y - mTouchDownY
+                val diffX = event.rawX - mTouchDownX
+                val diffY = event.rawY - mTouchDownY
 
                 if (mIsDragged || (Math.abs(diffX) > mDragThreshold && Math.abs(diffX) > Math.abs(diffY)) && video_surface_frame.controller.state.zoom == 1f) {
                     if (!mIsDragged) {
@@ -544,8 +574,8 @@ open class VideoPlayerActivity : SimpleActivity(), SeekBar.OnSeekBarChangeListen
                 }
             }
             MotionEvent.ACTION_UP -> {
-                val diffX = mTouchDownX - event.x
-                val diffY = mTouchDownY - event.y
+                val diffX = mTouchDownX - event.rawX
+                val diffY = mTouchDownY - event.rawY
 
                 val downGestureDuration = System.currentTimeMillis() - mTouchDownTime
                 if (config.allowDownGesture && !mIgnoreCloseDown && Math.abs(diffY) > Math.abs(diffX) && diffY < -mCloseDownThreshold &&

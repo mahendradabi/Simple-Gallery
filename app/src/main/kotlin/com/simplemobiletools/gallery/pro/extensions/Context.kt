@@ -1,6 +1,5 @@
 package com.simplemobiletools.gallery.pro.extensions
 
-import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
@@ -28,25 +27,20 @@ import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.signature.ObjectKey
 import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.helpers.*
+import com.simplemobiletools.commons.views.MySquareImageView
 import com.simplemobiletools.gallery.pro.R
-import com.simplemobiletools.gallery.pro.activities.SettingsActivity
 import com.simplemobiletools.gallery.pro.asynctasks.GetMediaAsynctask
 import com.simplemobiletools.gallery.pro.databases.GalleryDatabase
 import com.simplemobiletools.gallery.pro.helpers.*
 import com.simplemobiletools.gallery.pro.interfaces.*
 import com.simplemobiletools.gallery.pro.models.*
 import com.simplemobiletools.gallery.pro.svg.SvgSoftwareLayerSetter
-import com.simplemobiletools.gallery.pro.views.MySquareImageView
 import com.squareup.picasso.Picasso
 import pl.droidsonroids.gif.GifDrawable
 import java.io.File
 import java.io.FileInputStream
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
-import java.util.*
-import kotlin.Comparator
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 import kotlin.collections.set
 
 val Context.audioManager get() = getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -62,15 +56,13 @@ val Context.widgetsDB: WidgetsDao get() = GalleryDatabase.getInstance(applicatio
 
 val Context.mediaDB: MediumDao get() = GalleryDatabase.getInstance(applicationContext).MediumDao()
 
-val Context.directoryDao: DirectoryDao get() = GalleryDatabase.getInstance(applicationContext).DirectoryDao()
+val Context.directoryDB: DirectoryDao get() = GalleryDatabase.getInstance(applicationContext).DirectoryDao()
 
 val Context.favoritesDB: FavoritesDao get() = GalleryDatabase.getInstance(applicationContext).FavoritesDao()
 
 val Context.dateTakensDB: DateTakensDao get() = GalleryDatabase.getInstance(applicationContext).DateTakensDao()
 
 val Context.recycleBin: File get() = filesDir
-
-val Context.recycleBinPath: String get() = filesDir.absolutePath
 
 fun Context.movePinnedDirectoriesToFront(dirs: ArrayList<Directory>): ArrayList<Directory> {
     val foundFolders = ArrayList<Directory>()
@@ -186,7 +178,8 @@ fun Context.getDirsToShow(dirs: ArrayList<Directory>, allDirs: ArrayList<Directo
 
         // show the current folder as an available option too, not just subfolders
         if (currentPathPrefix.isNotEmpty()) {
-            val currentFolder = allDirs.firstOrNull { parentDirs.firstOrNull { it.path == currentPathPrefix } == null && it.path == currentPathPrefix }
+            val currentFolder =
+                allDirs.firstOrNull { parentDirs.firstOrNull { it.path.equals(currentPathPrefix, true) } == null && it.path.equals(currentPathPrefix, true) }
             currentFolder?.apply {
                 subfoldersCount = 1
                 parentDirs.add(this)
@@ -221,7 +214,7 @@ fun Context.getDirectParentSubfolders(dirs: ArrayList<Directory>, currentPathPre
             }
         }
 
-        if (currentPathPrefix.isNotEmpty() && path == currentPathPrefix || File(path).parent.equals(currentPathPrefix, true)) {
+        if (currentPathPrefix.isNotEmpty() && path.equals(currentPathPrefix, true) || File(path).parent.equals(currentPathPrefix, true)) {
             currentPaths.add(path)
         } else if (folders.any { !it.equals(path, true) && (File(path).parent.equals(it, true) || File(it).parent.equals(File(path).parent, true)) }) {
             // if we have folders like
@@ -229,7 +222,7 @@ fun Context.getDirectParentSubfolders(dirs: ArrayList<Directory>, currentPathPre
             // /storage/emulated/0/Pictures/Screenshots,
             // but /storage/emulated/0/Pictures is empty, still Pictures with the first folders thumbnails and proper other info
             val parent = File(path).parent
-            if (parent != null && !folders.contains(parent) && dirs.none { it.path == parent }) {
+            if (parent != null && !folders.contains(parent) && dirs.none { it.path.equals(parent, true) }) {
                 currentPaths.add(parent)
                 val isSortingAscending = config.sorting.isSortingAscending()
                 val subDirs = dirs.filter { File(it.path).parent.equals(File(path).parent, true) } as ArrayList<Directory>
@@ -381,18 +374,16 @@ fun Context.rescanFolderMedia(path: String) {
 }
 
 fun Context.rescanFolderMediaSync(path: String) {
-    getCachedMedia(path) {
-        val cached = it
-        GetMediaAsynctask(applicationContext, path, false, false, false) {
+    getCachedMedia(path) { cached ->
+        GetMediaAsynctask(applicationContext, path, isPickImage = false, isPickVideo = false, showAll = false) { newMedia ->
             ensureBackgroundThread {
-                val newMedia = it
-                val media = newMedia.filter { it is Medium } as ArrayList<Medium>
+                val media = newMedia.filterIsInstance<Medium>() as ArrayList<Medium>
                 try {
                     mediaDB.insertAll(media)
 
-                    cached.forEach {
-                        if (!newMedia.contains(it)) {
-                            val mediumPath = (it as? Medium)?.path
+                    cached.forEach { thumbnailItem ->
+                        if (!newMedia.contains(thumbnailItem)) {
+                            val mediumPath = (thumbnailItem as? Medium)?.path
                             if (mediumPath != null) {
                                 deleteDBPath(mediumPath)
                             }
@@ -407,7 +398,7 @@ fun Context.rescanFolderMediaSync(path: String) {
 
 fun Context.storeDirectoryItems(items: ArrayList<Directory>) {
     ensureBackgroundThread {
-        directoryDao.insertAll(items)
+        directoryDB.insertAll(items)
     }
 }
 
@@ -645,6 +636,7 @@ fun Context.getCachedDirectories(
     getVideosOnly: Boolean = false,
     getImagesOnly: Boolean = false,
     forceShowHidden: Boolean = false,
+    forceShowExcluded: Boolean = false,
     callback: (ArrayList<Directory>) -> Unit
 ) {
     ensureBackgroundThread {
@@ -654,7 +646,7 @@ fun Context.getCachedDirectories(
         }
 
         val directories = try {
-            directoryDao.getAll() as ArrayList<Directory>
+            directoryDB.getAll() as ArrayList<Directory>
         } catch (e: Exception) {
             ArrayList()
         }
@@ -664,7 +656,12 @@ fun Context.getCachedDirectories(
         }
 
         val shouldShowHidden = config.shouldShowHidden || forceShowHidden
-        val excludedPaths = config.excludedFolders
+        val excludedPaths = if (config.temporarilyShowExcluded || forceShowExcluded) {
+            HashSet()
+        } else {
+            config.excludedFolders
+        }
+
         val includedPaths = config.includedFolders
 
         val folderNoMediaStatuses = HashMap<String, Boolean>()
@@ -806,11 +803,11 @@ fun Context.getCachedMedia(path: String, getVideosOnly: Boolean = false, getImag
 }
 
 fun Context.removeInvalidDBDirectories(dirs: ArrayList<Directory>? = null) {
-    val dirsToCheck = dirs ?: directoryDao.getAll()
+    val dirsToCheck = dirs ?: directoryDB.getAll()
     val OTGPath = config.OTGPath
     dirsToCheck.filter { !it.areFavorites() && !it.isRecycleBin() && !getDoesFilePathExist(it.path, OTGPath) && it.path != config.tempFolderPath }.forEach {
         try {
-            directoryDao.deleteDirPath(it.path)
+            directoryDB.deleteDirPath(it.path)
         } catch (ignored: Exception) {
         }
     }
@@ -828,7 +825,7 @@ fun Context.updateDBMediaPath(oldPath: String, newPath: String) {
 
 fun Context.updateDBDirectory(directory: Directory) {
     try {
-        directoryDao.updateDirectory(
+        directoryDB.updateDirectory(
             directory.path,
             directory.tmb,
             directory.mediaCnt,

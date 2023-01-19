@@ -12,8 +12,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.provider.MediaStore
-import android.view.Menu
-import android.view.MenuItem
+import android.widget.ImageView
 import android.widget.RelativeLayout
 import androidx.exifinterface.media.ExifInterface
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,6 +27,7 @@ import com.bumptech.glide.request.target.Target
 import com.simplemobiletools.commons.dialogs.ColorPickerDialog
 import com.simplemobiletools.commons.dialogs.ConfirmationDialog
 import com.simplemobiletools.commons.extensions.*
+import com.simplemobiletools.commons.helpers.NavigationIcon
 import com.simplemobiletools.commons.helpers.REAL_FILE_PATH
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
 import com.simplemobiletools.commons.helpers.isNougatPlus
@@ -101,13 +101,21 @@ class EditActivity : SimpleActivity(), CropImageView.OnCropImageCompleteListener
             return
         }
 
-        initEditActivity()
+        setupOptionsMenu()
+        handlePermission(getPermissionToRequest()) {
+            if (!it) {
+                toast(R.string.no_storage_permissions)
+                finish()
+            }
+            initEditActivity()
+        }
     }
 
     override fun onResume() {
         super.onResume()
         isEditingWithThirdParty = false
-        bottom_draw_width.setColors(config.textColor, getAdjustedPrimaryColor(), config.backgroundColor)
+        bottom_draw_width.setColors(getProperTextColor(), getProperPrimaryColor(), getProperBackgroundColor())
+        setupToolbar(editor_toolbar, NavigationIcon.Arrow)
     }
 
     override fun onStop() {
@@ -117,20 +125,16 @@ class EditActivity : SimpleActivity(), CropImageView.OnCropImageCompleteListener
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_editor, menu)
-        updateMenuItemColors(menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.save_as -> saveImage()
-            R.id.edit -> editWith()
-            R.id.share -> shareImage()
-            else -> return super.onOptionsItemSelected(item)
+    private fun setupOptionsMenu() {
+        editor_toolbar.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.save_as -> saveImage()
+                R.id.edit -> editWith()
+                R.id.share -> shareImage()
+                else -> return@setOnMenuItemClickListener false
+            }
+            return@setOnMenuItemClickListener true
         }
-        return true
     }
 
     private fun initEditActivity() {
@@ -162,7 +166,7 @@ class EditActivity : SimpleActivity(), CropImageView.OnCropImageCompleteListener
         }
 
         saveUri = when {
-            intent.extras?.containsKey(MediaStore.EXTRA_OUTPUT) == true -> intent.extras!!.get(MediaStore.EXTRA_OUTPUT) as Uri
+            intent.extras?.containsKey(MediaStore.EXTRA_OUTPUT) == true && intent.extras!!.get(MediaStore.EXTRA_OUTPUT) is Uri -> intent.extras!!.get(MediaStore.EXTRA_OUTPUT) as Uri
             else -> uri!!
         }
 
@@ -452,6 +456,9 @@ class EditActivity : SimpleActivity(), CropImageView.OnCropImageCompleteListener
         bottom_primary_draw.setOnClickListener {
             bottomDrawClicked()
         }
+        arrayOf(bottom_primary_filter, bottom_primary_crop_rotate, bottom_primary_draw).forEach {
+            setupLongPress(it)
+        }
     }
 
     private fun bottomFilterClicked() {
@@ -510,6 +517,10 @@ class EditActivity : SimpleActivity(), CropImageView.OnCropImageCompleteListener
                 CROP_ROTATE_ASPECT_RATIO
             }
             updateCropRotateActionButtons()
+        }
+
+        arrayOf(bottom_rotate, bottom_resize, bottom_flip_horizontally, bottom_flip_vertically, bottom_aspect_ratio).forEach {
+            setupLongPress(it)
         }
     }
 
@@ -592,7 +603,7 @@ class EditActivity : SimpleActivity(), CropImageView.OnCropImageCompleteListener
             else -> null
         }
 
-        currentPrimaryActionButton?.applyColorFilter(getAdjustedPrimaryColor())
+        currentPrimaryActionButton?.applyColorFilter(getProperPrimaryColor())
         bottom_editor_filter_actions.beVisibleIf(currPrimaryAction == PRIMARY_ACTION_FILTER)
         bottom_editor_crop_rotate_actions.beVisibleIf(currPrimaryAction == PRIMARY_ACTION_CROP_ROTATE)
         bottom_editor_draw_actions.beVisibleIf(currPrimaryAction == PRIMARY_ACTION_DRAW)
@@ -708,7 +719,7 @@ class EditActivity : SimpleActivity(), CropImageView.OnCropImageCompleteListener
             else -> bottom_aspect_ratio_other
         }
 
-        currentAspectRatioButton.setTextColor(getAdjustedPrimaryColor())
+        currentAspectRatioButton.setTextColor(getProperPrimaryColor())
     }
 
     private fun updateCropRotateActionButtons() {
@@ -721,7 +732,7 @@ class EditActivity : SimpleActivity(), CropImageView.OnCropImageCompleteListener
             else -> null
         }
 
-        primaryActionView?.applyColorFilter(getAdjustedPrimaryColor())
+        primaryActionView?.applyColorFilter(getProperPrimaryColor())
     }
 
     private fun updateDrawColor(color: Int) {
@@ -787,6 +798,9 @@ class EditActivity : SimpleActivity(), CropImageView.OnCropImageCompleteListener
                         inputStream = ByteArrayInputStream(stream.toByteArray())
                         outputStream = contentResolver.openOutputStream(saveUri)
                         inputStream.copyTo(outputStream!!)
+                    } catch (e: Exception) {
+                        showErrorToast(e)
+                        return
                     } finally {
                         inputStream?.close()
                         outputStream?.close()
@@ -912,6 +926,16 @@ class EditActivity : SimpleActivity(), CropImageView.OnCropImageCompleteListener
             setResult(Activity.RESULT_OK, intent)
             toast(R.string.file_saved)
             finish()
+        }
+    }
+
+    private fun setupLongPress(view: ImageView) {
+        view.setOnLongClickListener {
+            val contentDescription = view.contentDescription
+            if (contentDescription != null) {
+                toast(contentDescription.toString())
+            }
+            true
         }
     }
 }

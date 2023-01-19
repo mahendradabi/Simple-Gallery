@@ -1,20 +1,14 @@
 package com.simplemobiletools.gallery.pro.activities
 
 import android.app.Activity
-import android.app.SearchManager
 import android.app.WallpaperManager
-import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
-import android.view.Menu
-import android.view.MenuItem
 import android.view.ViewGroup
 import android.widget.RelativeLayout
-import androidx.appcompat.widget.SearchView
-import androidx.core.view.MenuItemCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -22,19 +16,18 @@ import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import com.simplemobiletools.commons.dialogs.CreateNewFolderDialog
+import com.simplemobiletools.commons.dialogs.RadioGroupDialog
 import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.helpers.*
 import com.simplemobiletools.commons.models.FileDirItem
+import com.simplemobiletools.commons.models.RadioItem
 import com.simplemobiletools.commons.views.MyGridLayoutManager
 import com.simplemobiletools.commons.views.MyRecyclerView
 import com.simplemobiletools.gallery.pro.R
 import com.simplemobiletools.gallery.pro.adapters.MediaAdapter
 import com.simplemobiletools.gallery.pro.asynctasks.GetMediaAsynctask
 import com.simplemobiletools.gallery.pro.databases.GalleryDatabase
-import com.simplemobiletools.gallery.pro.dialogs.ChangeGroupingDialog
-import com.simplemobiletools.gallery.pro.dialogs.ChangeSortingDialog
-import com.simplemobiletools.gallery.pro.dialogs.ChangeViewTypeDialog
-import com.simplemobiletools.gallery.pro.dialogs.FilterMediaDialog
+import com.simplemobiletools.gallery.pro.dialogs.*
 import com.simplemobiletools.gallery.pro.extensions.*
 import com.simplemobiletools.gallery.pro.helpers.*
 import com.simplemobiletools.gallery.pro.interfaces.MediaOperationsListener
@@ -44,8 +37,6 @@ import com.simplemobiletools.gallery.pro.models.ThumbnailSection
 import kotlinx.android.synthetic.main.activity_media.*
 import java.io.File
 import java.io.IOException
-import java.util.*
-import kotlin.collections.ArrayList
 
 class MediaActivity : SimpleActivity(), MediaOperationsListener {
     private val LAST_MEDIA_CHECK_PERIOD = 3000L
@@ -58,7 +49,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
     private var mAllowPickingMultiple = false
     private var mShowAll = false
     private var mLoadedInitialPhotos = false
-    private var mIsSearchOpen = false
+    private var mWasFullscreenViewOpen = false
     private var mLastSearchedText = ""
     private var mLatestMediaId = 0L
     private var mLatestMediaDateId = 0L
@@ -66,7 +57,6 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
     private var mTempShowHiddenHandler = Handler()
     private var mCurrAsyncTask: GetMediaAsynctask? = null
     private var mZoomListener: MyRecyclerView.MyZoomListener? = null
-    private var mSearchMenuItem: MenuItem? = null
 
     private var mStoredAnimateGifs = true
     private var mStoredCropThumbnails = true
@@ -75,7 +65,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
     private var mStoredRoundedCorners = false
     private var mStoredMarkFavoriteItems = true
     private var mStoredTextColor = 0
-    private var mStoredAdjustedPrimaryColor = 0
+    private var mStoredPrimaryColor = 0
     private var mStoredThumbnailSpacing = 0
 
     companion object {
@@ -83,6 +73,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        isMaterialActivity = true
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_media)
 
@@ -102,10 +93,12 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
             return
         }
 
+        setupOptionsMenu()
+        refreshMenuItems()
         storeStateVariables()
+        updateMaterialActivityViews(media_coordinator, media_grid, useTransparentNavigation = !config.scrollHorizontally, useTopSearchMenu = true)
 
         if (mShowAll) {
-            supportActionBar?.setDisplayHomeAsUpEnabled(false)
             registerFileUpdateListener()
         }
 
@@ -123,6 +116,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
 
     override fun onResume() {
         super.onResume()
+        updateMenuColors()
         if (mStoredAnimateGifs != config.animateGifs) {
             getMediaAdapter()?.updateAnimateGifs(config.animateGifs)
         }
@@ -141,13 +135,13 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
             getMediaAdapter()?.updateShowFileTypes(config.showThumbnailFileTypes)
         }
 
-        if (mStoredTextColor != config.textColor) {
-            getMediaAdapter()?.updateTextColor(config.textColor)
+        if (mStoredTextColor != getProperTextColor()) {
+            getMediaAdapter()?.updateTextColor(getProperTextColor())
         }
 
-        val adjustedPrimaryColor = getAdjustedPrimaryColor()
-        if (mStoredAdjustedPrimaryColor != adjustedPrimaryColor) {
-            getMediaAdapter()?.updatePrimaryColor(config.primaryColor)
+        val primaryColor = getProperPrimaryColor()
+        if (mStoredPrimaryColor != primaryColor) {
+            getMediaAdapter()?.updatePrimaryColor()
         }
 
         if (
@@ -159,21 +153,22 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
             setupAdapter()
         }
 
-        media_fastscroller.updateColors(adjustedPrimaryColor)
+        refreshMenuItems()
+
+        media_fastscroller.updateColors(primaryColor)
         media_refresh_layout.isEnabled = config.enablePullToRefresh
         getMediaAdapter()?.apply {
             dateFormat = config.dateFormat
             timeFormat = getTimeFormat()
         }
 
-        media_empty_text_placeholder.setTextColor(config.textColor)
-        media_empty_text_placeholder_2.setTextColor(getAdjustedPrimaryColor())
+        media_empty_text_placeholder.setTextColor(getProperTextColor())
+        media_empty_text_placeholder_2.setTextColor(getProperPrimaryColor())
+        media_empty_text_placeholder_2.bringToFront()
 
-        if (!mIsSearchOpen) {
-            invalidateOptionsMenu()
-        }
-
-        if (mMedia.isEmpty() || config.getFolderSorting(mPath) and SORT_BY_RANDOM == 0) {
+        // do not refresh Random sorted files after opening a fullscreen image and going Back
+        val isRandomSorting = config.getFolderSorting(mPath) and SORT_BY_RANDOM != 0
+        if (mMedia.isEmpty() || !isRandomSorting || (isRandomSorting && !mWasFullscreenViewOpen)) {
             if (shouldSkipAuthentication()) {
                 tryLoadGallery()
             } else {
@@ -225,12 +220,18 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
         mTempShowHiddenHandler.removeCallbacksAndMessages(null)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_media, menu)
+    override fun onBackPressed() {
+        if (media_menu.isSearchOpen) {
+            media_menu.closeSearch()
+        } else {
+            super.onBackPressed()
+        }
+    }
 
+    private fun refreshMenuItems() {
         val isDefaultFolder = !config.defaultFolder.isEmpty() && File(config.defaultFolder).compareTo(File(mPath)) == 0
 
-        menu.apply {
+        media_menu.getToolbar().menu.apply {
             findItem(R.id.group).isVisible = !config.scrollHorizontally
 
             findItem(R.id.empty_recycle_bin).isVisible = mPath == RECYCLE_BIN
@@ -242,48 +243,54 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
             findItem(R.id.about).isVisible = mShowAll
             findItem(R.id.create_new_folder).isVisible = !mShowAll && mPath != RECYCLE_BIN && mPath != FAVORITES
 
-            findItem(R.id.temporarily_show_hidden).isVisible = !isRPlus() && !config.shouldShowHidden
-            findItem(R.id.stop_showing_hidden).isVisible = !isRPlus() && config.temporarilyShowHidden
+            findItem(R.id.temporarily_show_hidden).isVisible = !config.shouldShowHidden
+            findItem(R.id.stop_showing_hidden).isVisible = (!isRPlus() || isExternalStorageManager()) && config.temporarilyShowHidden
 
             findItem(R.id.set_as_default_folder).isVisible = !isDefaultFolder
             findItem(R.id.unset_as_default_folder).isVisible = isDefaultFolder
 
             val viewType = config.getFolderViewType(if (mShowAll) SHOW_ALL else mPath)
-            findItem(R.id.increase_column_count).isVisible = viewType == VIEW_TYPE_GRID && config.mediaColumnCnt < MAX_COLUMN_COUNT
-            findItem(R.id.reduce_column_count).isVisible = viewType == VIEW_TYPE_GRID && config.mediaColumnCnt > 1
+            findItem(R.id.column_count).isVisible = viewType == VIEW_TYPE_GRID
             findItem(R.id.toggle_filename).isVisible = viewType == VIEW_TYPE_GRID
         }
-
-        setupSearch(menu)
-        updateMenuItemColors(menu)
-        return true
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.sort -> showSortingDialog()
-            R.id.filter -> showFilterMediaDialog()
-            R.id.empty_recycle_bin -> emptyRecycleBin()
-            R.id.empty_disable_recycle_bin -> emptyAndDisableRecycleBin()
-            R.id.restore_all_files -> restoreAllFiles()
-            R.id.toggle_filename -> toggleFilenameVisibility()
-            R.id.open_camera -> launchCamera()
-            R.id.folder_view -> switchToFolderView()
-            R.id.change_view_type -> changeViewType()
-            R.id.group -> showGroupByDialog()
-            R.id.create_new_folder -> createNewFolder()
-            R.id.temporarily_show_hidden -> tryToggleTemporarilyShowHidden()
-            R.id.stop_showing_hidden -> tryToggleTemporarilyShowHidden()
-            R.id.increase_column_count -> increaseColumnCount()
-            R.id.reduce_column_count -> reduceColumnCount()
-            R.id.set_as_default_folder -> setAsDefaultFolder()
-            R.id.unset_as_default_folder -> unsetAsDefaultFolder()
-            R.id.slideshow -> startSlideshow()
-            R.id.settings -> launchSettings()
-            R.id.about -> launchAbout()
-            else -> return super.onOptionsItemSelected(item)
+    private fun setupOptionsMenu() {
+        media_menu.getToolbar().inflateMenu(R.menu.menu_media)
+        media_menu.toggleHideOnScroll(!config.scrollHorizontally)
+        media_menu.setupMenu()
+
+        media_menu.onSearchTextChangedListener = { text ->
+            mLastSearchedText = text
+            searchQueryChanged(text)
+            media_refresh_layout.isEnabled = text.isEmpty() && config.enablePullToRefresh
         }
-        return true
+
+        media_menu.getToolbar().setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.sort -> showSortingDialog()
+                R.id.filter -> showFilterMediaDialog()
+                R.id.empty_recycle_bin -> emptyRecycleBin()
+                R.id.empty_disable_recycle_bin -> emptyAndDisableRecycleBin()
+                R.id.restore_all_files -> restoreAllFiles()
+                R.id.toggle_filename -> toggleFilenameVisibility()
+                R.id.open_camera -> launchCamera()
+                R.id.folder_view -> switchToFolderView()
+                R.id.change_view_type -> changeViewType()
+                R.id.group -> showGroupByDialog()
+                R.id.create_new_folder -> createNewFolder()
+                R.id.temporarily_show_hidden -> tryToggleTemporarilyShowHidden()
+                R.id.stop_showing_hidden -> tryToggleTemporarilyShowHidden()
+                R.id.column_count -> changeColumnCount()
+                R.id.set_as_default_folder -> setAsDefaultFolder()
+                R.id.unset_as_default_folder -> unsetAsDefaultFolder()
+                R.id.slideshow -> startSlideshow()
+                R.id.settings -> launchSettings()
+                R.id.about -> launchAbout()
+                else -> return@setOnMenuItemClickListener false
+            }
+            return@setOnMenuItemClickListener true
+        }
     }
 
     private fun startSlideshow() {
@@ -300,59 +307,24 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
         }
     }
 
+    private fun updateMenuColors() {
+        updateStatusbarColor(getProperBackgroundColor())
+        media_menu.updateColors()
+    }
+
     private fun storeStateVariables() {
+        mStoredTextColor = getProperTextColor()
+        mStoredPrimaryColor = getProperPrimaryColor()
         config.apply {
             mStoredAnimateGifs = animateGifs
             mStoredCropThumbnails = cropThumbnails
             mStoredScrollHorizontally = scrollHorizontally
             mStoredShowFileTypes = showThumbnailFileTypes
             mStoredMarkFavoriteItems = markFavoriteItems
-            mStoredTextColor = textColor
             mStoredThumbnailSpacing = thumbnailSpacing
             mStoredRoundedCorners = fileRoundedCorners
             mShowAll = showAll
         }
-        mStoredAdjustedPrimaryColor = getAdjustedPrimaryColor()
-    }
-
-    private fun setupSearch(menu: Menu) {
-        val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
-        mSearchMenuItem = menu.findItem(R.id.search)
-        (mSearchMenuItem?.actionView as? SearchView)?.apply {
-            setSearchableInfo(searchManager.getSearchableInfo(componentName))
-            isSubmitButtonEnabled = false
-            setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                override fun onQueryTextSubmit(query: String) = false
-
-                override fun onQueryTextChange(newText: String): Boolean {
-                    if (mIsSearchOpen) {
-                        mLastSearchedText = newText
-                        searchQueryChanged(newText)
-                    }
-                    return true
-                }
-            })
-        }
-
-        MenuItemCompat.setOnActionExpandListener(mSearchMenuItem, object : MenuItemCompat.OnActionExpandListener {
-            override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
-                mIsSearchOpen = true
-                media_refresh_layout.isEnabled = false
-                return true
-            }
-
-            // this triggers on device rotation too, avoid doing anything
-            override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
-                if (mIsSearchOpen) {
-                    mIsSearchOpen = false
-                    mLastSearchedText = ""
-
-                    media_refresh_layout.isEnabled = config.enablePullToRefresh
-                    searchQueryChanged("")
-                }
-                return true
-            }
-        })
     }
 
     private fun searchQueryChanged(text: String) {
@@ -380,7 +352,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
     }
 
     private fun tryLoadGallery() {
-        handlePermission(PERMISSION_WRITE_STORAGE) {
+        handlePermission(getPermissionToRequest()) {
             if (it) {
                 val dirName = when {
                     mPath == FAVORITES -> getString(R.string.favorites)
@@ -388,7 +360,21 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
                     mPath == config.OTGPath -> getString(R.string.usb)
                     else -> getHumanizedFilename(mPath)
                 }
-                updateActionBarTitle(if (mShowAll) resources.getString(R.string.all_folders) else dirName)
+
+                val searchHint = if (mShowAll) {
+                    getString(R.string.search_files)
+                } else {
+                    getString(R.string.search_in_placeholder, dirName)
+                }
+
+                media_menu.updateHintText(searchHint)
+                if (!mShowAll) {
+                    media_menu.toggleForceArrowBackIcon(true)
+                    media_menu.onNavigateBackClickListener = {
+                        onBackPressed()
+                    }
+                }
+
                 getMedia()
                 setupLayoutManager()
             } else {
@@ -503,7 +489,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
         val paths = mMedia.filter { it is Medium }.map { (it as Medium).path } as ArrayList<String>
         restoreRecycleBinPaths(paths) {
             ensureBackgroundThread {
-                directoryDao.deleteDirPath(RECYCLE_BIN)
+                directoryDB.deleteDirPath(RECYCLE_BIN)
             }
             finish()
         }
@@ -523,7 +509,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
 
     private fun changeViewType() {
         ChangeViewTypeDialog(this, false, mPath) {
-            invalidateOptionsMenu()
+            refreshMenuItems()
             setupLayoutManager()
             media_grid.adapter = null
             setupAdapter()
@@ -611,7 +597,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
 
             if (mPath == FAVORITES) {
                 ensureBackgroundThread {
-                    directoryDao.deleteDirPath(FAVORITES)
+                    directoryDB.deleteDirPath(FAVORITES)
                 }
             }
 
@@ -625,7 +611,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
     private fun deleteDBDirectory() {
         ensureBackgroundThread {
             try {
-                directoryDao.deleteDirPath(mPath)
+                directoryDB.deleteDirPath(mPath)
             } catch (ignored: Exception) {
             }
         }
@@ -641,8 +627,12 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
         if (config.temporarilyShowHidden) {
             toggleTemporarilyShowHidden(false)
         } else {
-            handleHiddenFolderPasswordProtection {
-                toggleTemporarilyShowHidden(true)
+            if (isRPlus() && !isExternalStorageManager()) {
+                GrantAllFilesDialog(this)
+            } else {
+                handleHiddenFolderPasswordProtection {
+                    toggleTemporarilyShowHidden(true)
+                }
             }
         }
     }
@@ -651,7 +641,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
         mLoadedInitialPhotos = false
         config.temporarilyShowHidden = show
         getMedia()
-        invalidateOptionsMenu()
+        refreshMenuItems()
     }
 
     private fun setupLayoutManager() {
@@ -741,19 +731,36 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
         }
     }
 
+    private fun changeColumnCount() {
+        val items = ArrayList<RadioItem>()
+        for (i in 1..MAX_COLUMN_COUNT) {
+            items.add(RadioItem(i, resources.getQuantityString(R.plurals.column_counts, i, i)))
+        }
+
+        val currentColumnCount = (media_grid.layoutManager as MyGridLayoutManager).spanCount
+        RadioGroupDialog(this, items, currentColumnCount) {
+            val newColumnCount = it as Int
+            if (currentColumnCount != newColumnCount) {
+                config.mediaColumnCnt = newColumnCount
+                columnCountChanged()
+            }
+        }
+    }
+
     private fun increaseColumnCount() {
-        config.mediaColumnCnt = ++(media_grid.layoutManager as MyGridLayoutManager).spanCount
+        config.mediaColumnCnt += 1
         columnCountChanged()
     }
 
     private fun reduceColumnCount() {
-        config.mediaColumnCnt = --(media_grid.layoutManager as MyGridLayoutManager).spanCount
+        config.mediaColumnCnt -= 1
         columnCountChanged()
     }
 
     private fun columnCountChanged() {
+        (media_grid.layoutManager as MyGridLayoutManager).spanCount = config.mediaColumnCnt
         handleGridSpacing()
-        invalidateOptionsMenu()
+        refreshMenuItems()
         getMediaAdapter()?.apply {
             notifyItemRangeChanged(0, media.size)
         }
@@ -806,6 +813,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
             }
             finish()
         } else {
+            mWasFullscreenViewOpen = true
             val isVideo = path.isVideoFast()
             if (isVideo) {
                 val extras = HashMap<String, Boolean>()
@@ -825,6 +833,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
                     putExtra(SHOW_ALL, mShowAll)
                     putExtra(SHOW_FAVORITES, mPath == FAVORITES)
                     putExtra(SHOW_RECYCLE_BIN, mPath == RECYCLE_BIN)
+                    putExtra(IS_FROM_GALLERY, true)
                     startActivity(this)
                 }
             }
@@ -943,11 +952,11 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
 
     private fun setAsDefaultFolder() {
         config.defaultFolder = mPath
-        invalidateOptionsMenu()
+        refreshMenuItems()
     }
 
     private fun unsetAsDefaultFolder() {
         config.defaultFolder = ""
-        invalidateOptionsMenu()
+        refreshMenuItems()
     }
 }

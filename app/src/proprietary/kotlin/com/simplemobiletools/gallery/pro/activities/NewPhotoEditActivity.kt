@@ -3,22 +3,23 @@ package com.simplemobiletools.gallery.pro.activities
 import android.annotation.TargetApi
 import android.app.Activity
 import android.content.Intent
-import androidx.exifinterface.media.ExifInterface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import androidx.exifinterface.media.ExifInterface
 import com.simplemobiletools.commons.extensions.*
-import com.simplemobiletools.commons.helpers.PERMISSION_WRITE_STORAGE
 import com.simplemobiletools.commons.helpers.REAL_FILE_PATH
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
 import com.simplemobiletools.commons.helpers.isNougatPlus
+import com.simplemobiletools.commons.helpers.isRPlus
 import com.simplemobiletools.commons.models.FileDirItem
 import com.simplemobiletools.gallery.pro.R
 import com.simplemobiletools.gallery.pro.dialogs.SaveAsDialog
 import com.simplemobiletools.gallery.pro.extensions.config
 import com.simplemobiletools.gallery.pro.extensions.fixDateTaken
 import com.simplemobiletools.gallery.pro.extensions.tryDeleteFileDirItem
+import com.simplemobiletools.gallery.pro.helpers.getPermissionToRequest
 import ly.img.android.pesdk.PhotoEditorSettingsList
 import ly.img.android.pesdk.assets.filter.basic.FilterPackBasic
 import ly.img.android.pesdk.assets.font.basic.FontPackBasic
@@ -61,7 +62,7 @@ class NewPhotoEditActivity : SimpleActivity() {
             return
         }
 
-        handlePermission(PERMISSION_WRITE_STORAGE) {
+        handlePermission(getPermissionToRequest()) {
             if (it) {
                 initEditActivity()
             } else {
@@ -207,7 +208,7 @@ class NewPhotoEditActivity : SimpleActivity() {
 
     // In case the user wants to overwrite the original file and it is on an SD card, delete it manually first. Else the system just appends (1)
     private fun handleFileOverwriting(path: String, callback: () -> Unit) {
-        if (getDoesFilePathExist(path) && isPathOnSD(path)) {
+        if ((!isRPlus() || isExternalStorageManager()) && getDoesFilePathExist(path) && isPathOnSD(path)) {
             val fileDirItem = FileDirItem(path, path.getFilenameFromPath())
             tryDeleteFileDirItem(fileDirItem, false, true) { success ->
                 if (success) {
@@ -234,10 +235,12 @@ class NewPhotoEditActivity : SimpleActivity() {
         PhotoEditorBuilder(this)
             .setSettingsList(settingsList)
             .startActivityForResult(this, PESDK_EDIT_IMAGE)
+
+        settingsList.release()
     }
 
     private fun createPesdkSettingsList(): PhotoEditorSettingsList {
-        val settingsList = PhotoEditorSettingsList().apply {
+        val settingsList = PhotoEditorSettingsList(false).apply {
             configure<UiConfigFilter> {
                 it.setFilterList(FilterPackBasic.getFilterPack())
             }
@@ -253,6 +256,8 @@ class NewPhotoEditActivity : SimpleActivity() {
                 add(CropAspectAsset("my_crop_9_19", 9, 19, false))
                 add(CropAspectAsset("my_crop_20_9", 20, 9, false))
                 add(CropAspectAsset("my_crop_9_20", 9, 20, false))
+                add(CropAspectAsset("my_crop_21_9", 21, 9, false))
+                add(CropAspectAsset("my_crop_9_21", 9, 21, false))
                 add(CropAspectAsset("my_crop_5_4", 5, 4, false))
                 add(CropAspectAsset("my_crop_4_5", 4, 5, false))
                 add(CropAspectAsset("my_crop_37_18", 37, 18, false))
@@ -265,6 +270,7 @@ class NewPhotoEditActivity : SimpleActivity() {
                 add(ToggleAspectItem(CropAspectItem("my_crop_2_1"), CropAspectItem("my_crop_1_2")))
                 add(ToggleAspectItem(CropAspectItem("my_crop_19_9"), CropAspectItem("my_crop_9_19")))
                 add(ToggleAspectItem(CropAspectItem("my_crop_20_9"), CropAspectItem("my_crop_9_20")))
+                add(ToggleAspectItem(CropAspectItem("my_crop_21_9"), CropAspectItem("my_crop_9_21")))
                 add(ToggleAspectItem(CropAspectItem("my_crop_5_4"), CropAspectItem("my_crop_4_5")))
                 add(ToggleAspectItem(CropAspectItem("my_crop_37_18"), CropAspectItem("my_crop_18_37")))
                 add(ToggleAspectItem(CropAspectItem("my_crop_16_10"), CropAspectItem("my_crop_10_16")))
@@ -289,7 +295,13 @@ class NewPhotoEditActivity : SimpleActivity() {
                 )
             }
 
-            getSettingsModel(UiConfigTheme::class.java).theme = R.style.Imgly_Theme_NoFullscreen
+            val theme = if (isUsingSystemDarkTheme()) {
+                R.style.Theme_Imgly_NoFullscreen
+            } else {
+                R.style.Theme_Imgly_Light_NoFullscreen
+            }
+
+            getSettingsModel(UiConfigTheme::class.java).theme = theme
 
             configure<PhotoEditorSaveSettings> {
                 it.setExportFormat(ImageExportFormat.AUTO)

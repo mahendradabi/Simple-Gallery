@@ -18,16 +18,16 @@ class GetMediaAsynctask(val context: Context, val mPath: String, val isPickImage
     override fun doInBackground(vararg params: Void): ArrayList<ThumbnailItem> {
         val pathToUse = if (showAll) SHOW_ALL else mPath
         val folderGrouping = context.config.getFolderGrouping(pathToUse)
-        val fileSorting = context.config.getFolderSorting(pathToUse)
-        val getProperDateTaken = fileSorting and SORT_BY_DATE_TAKEN != 0 ||
+        val folderSorting = context.config.getFolderSorting(pathToUse)
+        val getProperDateTaken = folderSorting and SORT_BY_DATE_TAKEN != 0 ||
                 folderGrouping and GROUP_BY_DATE_TAKEN_DAILY != 0 ||
                 folderGrouping and GROUP_BY_DATE_TAKEN_MONTHLY != 0
 
-        val getProperLastModified = fileSorting and SORT_BY_DATE_MODIFIED != 0 ||
+        val getProperLastModified = folderSorting and SORT_BY_DATE_MODIFIED != 0 ||
                 folderGrouping and GROUP_BY_LAST_MODIFIED_DAILY != 0 ||
                 folderGrouping and GROUP_BY_LAST_MODIFIED_MONTHLY != 0
 
-        val getProperFileSize = fileSorting and SORT_BY_SIZE != 0
+        val getProperFileSize = folderSorting and SORT_BY_SIZE != 0
         val favoritePaths = context.getFavoritePaths()
         val getVideoDurations = context.config.showThumbnailVideoDuration
         val lastModifieds = if (getProperLastModified) mediaFetcher.getLastModifieds() else HashMap()
@@ -38,7 +38,7 @@ class GetMediaAsynctask(val context: Context, val mPath: String, val isPickImage
             val media = ArrayList<Medium>()
             foldersToScan.forEach {
                 val newMedia = mediaFetcher.getFilesFrom(it, isPickImage, isPickVideo, getProperDateTaken, getProperLastModified, getProperFileSize,
-                    favoritePaths, getVideoDurations, lastModifieds, dateTakens, null)
+                    favoritePaths, getVideoDurations, lastModifieds, dateTakens.clone() as HashMap<String, Long>, null)
                 media.addAll(newMedia)
             }
 

@@ -1,7 +1,9 @@
 package com.simplemobiletools.gallery.pro.helpers
 
 import com.simplemobiletools.commons.helpers.MONTH_SECONDS
-import com.simplemobiletools.commons.helpers.isQPlus
+import com.simplemobiletools.commons.helpers.PERMISSION_READ_MEDIA_IMAGES
+import com.simplemobiletools.commons.helpers.PERMISSION_WRITE_STORAGE
+import com.simplemobiletools.commons.helpers.isTiramisuPlus
 
 // shared preferences
 const val DIRECTORY_SORT_ORDER = "directory_sort_order"
@@ -9,6 +11,10 @@ const val GROUP_FOLDER_PREFIX = "group_folder_"
 const val VIEW_TYPE_PREFIX = "view_type_folder_"
 const val SHOW_HIDDEN_MEDIA = "show_hidden_media"
 const val TEMPORARILY_SHOW_HIDDEN = "temporarily_show_hidden"
+const val TEMPORARILY_SHOW_EXCLUDED = "temporarily_show_excluded"
+const val EXCLUDED_PASSWORD_PROTECTION = "excluded_password_protection"
+const val EXCLUDED_PASSWORD_HASH = "excluded_password_hash"
+const val EXCLUDED_PROTECTION_TYPE = "excluded_protection_type"
 const val IS_THIRD_PARTY_INTENT = "is_third_party_intent"
 const val AUTOPLAY_VIDEOS = "autoplay_videos"
 const val REMEMBER_LAST_VIDEO_POSITION = "remember_last_video_position"
@@ -90,6 +96,9 @@ const val LIMIT_FOLDER_TITLE = "folder_limit_title"
 const val THUMBNAIL_SPACING = "thumbnail_spacing"
 const val FILE_ROUNDED_CORNERS = "file_rounded_corners"
 const val CUSTOM_FOLDERS_ORDER = "custom_folders_order"
+const val AVOID_SHOWING_ALL_FILES_PROMPT = "avoid_showing_all_files_prompt"
+const val SEARCH_ALL_FILES_BY_DEFAULT = "search_all_files_by_default"
+const val LAST_EXPORTED_FAVORITES_FOLDER = "last_exported_favorites_folder"
 
 // slideshow
 const val SLIDESHOW_INTERVAL = "slideshow_interval"
@@ -240,3 +249,5 @@ const val FOLDER_MEDIA_CNT_NONE = 3
 
 const val FOLDER_STYLE_SQUARE = 1
 const val FOLDER_STYLE_ROUNDED_CORNERS = 2
+
+fun getPermissionToRequest() = if (isTiramisuPlus()) PERMISSION_READ_MEDIA_IMAGES else PERMISSION_WRITE_STORAGE

@@ -38,7 +38,6 @@ import kotlinx.android.synthetic.main.video_item_grid.view.media_item_holder
 import kotlinx.android.synthetic.main.video_item_grid.view.medium_check
 import kotlinx.android.synthetic.main.video_item_grid.view.medium_name
 import kotlinx.android.synthetic.main.video_item_grid.view.medium_thumbnail
-import java.util.*
 
 class MediaAdapter(
     activity: BaseSimpleActivity, var media: ArrayList<ThumbnailItem>, val listener: MediaOperationsListener?, val isAGetIntent: Boolean,
@@ -143,6 +142,8 @@ class MediaAdapter(
             findItem(R.id.cab_fix_date_taken).isVisible = !isInRecycleBin
             findItem(R.id.cab_move_to).isVisible = !isInRecycleBin
             findItem(R.id.cab_open_with).isVisible = isOneItemSelected
+            findItem(R.id.cab_edit).isVisible = isOneItemSelected
+            findItem(R.id.cab_set_as).isVisible = isOneItemSelected
             findItem(R.id.cab_confirm_selection).isVisible = isAGetIntent && allowMultiplePicks && selectedKeys.isNotEmpty()
             findItem(R.id.cab_restore_recycle_bin_files).isVisible = selectedPaths.all { it.startsWith(activity.recycleBinPath) }
             findItem(R.id.cab_create_shortcut).isVisible = isOreoPlus() && isOneItemSelected
@@ -160,7 +161,7 @@ class MediaAdapter(
         when (id) {
             R.id.cab_confirm_selection -> confirmSelection()
             R.id.cab_properties -> showProperties()
-            R.id.cab_rename -> renameFile()
+            R.id.cab_rename -> checkMediaManagementAndRename()
             R.id.cab_edit -> editFile()
             R.id.cab_hide -> toggleFileVisibility(true)
             R.id.cab_unhide -> toggleFileVisibility(false)
@@ -171,7 +172,7 @@ class MediaAdapter(
             R.id.cab_rotate_right -> rotateSelection(90)
             R.id.cab_rotate_left -> rotateSelection(270)
             R.id.cab_rotate_one_eighty -> rotateSelection(180)
-            R.id.cab_copy_to -> copyMoveTo(true)
+            R.id.cab_copy_to -> checkMediaManagementAndCopy(true)
             R.id.cab_move_to -> moveFilesTo()
             R.id.cab_create_shortcut -> createShortcut()
             R.id.cab_select_all -> selectAll()
@@ -210,8 +211,8 @@ class MediaAdapter(
 
     private fun checkHideBtnVisibility(menu: Menu, selectedItems: ArrayList<Medium>) {
         val isInRecycleBin = selectedItems.firstOrNull()?.getIsInRecycleBin() == true
-        menu.findItem(R.id.cab_hide).isVisible = !isRPlus() && !isInRecycleBin && selectedItems.any { !it.isHidden() }
-        menu.findItem(R.id.cab_unhide).isVisible = !isRPlus() && !isInRecycleBin && selectedItems.any { it.isHidden() }
+        menu.findItem(R.id.cab_hide).isVisible = (!isRPlus() || isExternalStorageManager()) && !isInRecycleBin && selectedItems.any { !it.isHidden() }
+        menu.findItem(R.id.cab_unhide).isVisible = (!isRPlus() || isExternalStorageManager()) && !isInRecycleBin && selectedItems.any { it.isHidden() }
     }
 
     private fun checkFavoriteBtnVisibility(menu: Menu, selectedItems: ArrayList<Medium>) {
@@ -233,12 +234,26 @@ class MediaAdapter(
         }
     }
 
+    private fun checkMediaManagementAndRename() {
+        activity.handleMediaManagementPrompt {
+            renameFile()
+        }
+    }
+
     private fun renameFile() {
+        val firstPath = getFirstSelectedItemPath() ?: return
+
+        val isSDOrOtgRootFolder = activity.isAStorageRootFolder(firstPath.getParentPath()) && !firstPath.startsWith(activity.internalStoragePath)
+        if (isRPlus() && isSDOrOtgRootFolder && !isExternalStorageManager()) {
+            activity.toast(R.string.rename_in_sd_card_system_restriction, Toast.LENGTH_LONG)
+            finishActMode()
+            return
+        }
+
         if (selectedKeys.size == 1) {
-            val oldPath = getFirstSelectedItemPath() ?: return
-            RenameItemDialog(activity, oldPath) {
+            RenameItemDialog(activity, firstPath) {
                 ensureBackgroundThread {
-                    activity.updateDBMediaPath(oldPath, it)
+                    activity.updateDBMediaPath(firstPath, it)
 
                     activity.runOnUiThread {
                         enableInstantLoad()
@@ -347,7 +362,13 @@ class MediaAdapter(
 
     private fun moveFilesTo() {
         activity.handleDeletePasswordProtection {
-            copyMoveTo(false)
+            checkMediaManagementAndCopy(false)
+        }
+    }
+
+    private fun checkMediaManagementAndCopy(isCopyOperation: Boolean) {
+        activity.handleMediaManagementPrompt {
+            copyMoveTo(isCopyOperation)
         }
     }
 
@@ -425,29 +446,42 @@ class MediaAdapter(
     }
 
     private fun checkDeleteConfirmation() {
-        if (config.isDeletePasswordProtectionOn) {
-            activity.handleDeletePasswordProtection {
+        activity.handleMediaManagementPrompt {
+            if (config.isDeletePasswordProtectionOn) {
+                activity.handleDeletePasswordProtection {
+                    deleteFiles()
+                }
+            } else if (config.tempSkipDeleteConfirmation || config.skipDeleteConfirmation) {
                 deleteFiles()
+            } else {
+                askConfirmDelete()
             }
-        } else if (config.tempSkipDeleteConfirmation || config.skipDeleteConfirmation) {
-            deleteFiles()
-        } else {
-            askConfirmDelete()
         }
     }
 
     private fun askConfirmDelete() {
         val itemsCnt = selectedKeys.size
-        val firstPath = getSelectedPaths().first()
-        val items = if (itemsCnt == 1) {
-            "\"${firstPath.getFilenameFromPath()}\""
+        val selectedMedia = getSelectedItems()
+        val firstPath = selectedMedia.first().path
+        val fileDirItem = selectedMedia.first().toFileDirItem()
+        val size = fileDirItem.getProperSize(activity, countHidden = true).formatSize()
+        val itemsAndSize = if (itemsCnt == 1) {
+            fileDirItem.mediaStoreId = selectedMedia.first().mediaStoreId
+            "\"${firstPath.getFilenameFromPath()}\" ($size)"
         } else {
-            resources.getQuantityString(R.plurals.delete_items, itemsCnt, itemsCnt)
+            val fileDirItems = ArrayList<FileDirItem>(selectedMedia.size)
+            selectedMedia.forEach { medium ->
+                val curFileDirItem = medium.toFileDirItem()
+                fileDirItems.add(curFileDirItem)
+            }
+            val fileSize = fileDirItems.sumByLong { it.getProperSize(activity, countHidden = true) }.formatSize()
+            val deleteItemsString = resources.getQuantityString(R.plurals.delete_items, itemsCnt, itemsCnt)
+            "$deleteItemsString ($fileSize)"
         }
 
         val isRecycleBin = firstPath.startsWith(activity.recycleBinPath)
         val baseString = if (config.useRecycleBin && !isRecycleBin) R.string.move_to_recycle_bin_confirmation else R.string.deletion_confirmation
-        val question = String.format(resources.getString(baseString), items)
+        val question = String.format(resources.getString(baseString), itemsAndSize)
         DeleteWithRememberDialog(activity, question) {
             config.tempSkipDeleteConfirmation = it
             deleteFiles()
@@ -459,26 +493,35 @@ class MediaAdapter(
             return
         }
 
-        val SAFPath = getSelectedPaths().firstOrNull { activity.needsStupidWritePermissions(it) } ?: getFirstSelectedItemPath() ?: return
+        val selectedItems = getSelectedItems()
+        val selectedPaths = selectedItems.map { it.path } as ArrayList<String>
+        val SAFPath = selectedPaths.firstOrNull { activity.needsStupidWritePermissions(it) } ?: getFirstSelectedItemPath() ?: return
         activity.handleSAFDialog(SAFPath) {
             if (!it) {
                 return@handleSAFDialog
             }
 
-            val fileDirItems = ArrayList<FileDirItem>(selectedKeys.size)
-            val removeMedia = ArrayList<Medium>(selectedKeys.size)
-            val positions = getSelectedItemPositions()
+            val sdk30SAFPath = selectedPaths.firstOrNull { activity.isAccessibleWithSAFSdk30(it) } ?: getFirstSelectedItemPath() ?: return@handleSAFDialog
+            activity.checkManageMediaOrHandleSAFDialogSdk30(sdk30SAFPath) {
+                if (!it) {
+                    return@checkManageMediaOrHandleSAFDialogSdk30
+                }
 
-            getSelectedItems().forEach {
-                fileDirItems.add(FileDirItem(it.path, it.name))
-                removeMedia.add(it)
+                val fileDirItems = ArrayList<FileDirItem>(selectedKeys.size)
+                val removeMedia = ArrayList<Medium>(selectedKeys.size)
+                val positions = getSelectedItemPositions()
+
+                selectedItems.forEach { medium ->
+                    fileDirItems.add(medium.toFileDirItem())
+                    removeMedia.add(medium)
+                }
+
+                media.removeAll(removeMedia)
+                listener?.tryDeleteFiles(fileDirItems)
+                listener?.updateMediaGridDecoration(media)
+                removeSelectedItems(positions)
+                currentMediaHash = media.hashCode()
             }
-
-            media.removeAll(removeMedia)
-            listener?.tryDeleteFiles(fileDirItems)
-            listener?.updateMediaGridDecoration(media)
-            removeSelectedItems(positions)
-            currentMediaHash = media.hashCode()
         }
     }
 
@@ -576,7 +619,7 @@ class MediaAdapter(
 
             medium_check?.beVisibleIf(isSelected)
             if (isSelected) {
-                medium_check?.background?.applyColorFilter(adjustedPrimaryColor)
+                medium_check?.background?.applyColorFilter(properPrimaryColor)
                 medium_check.applyColorFilter(contrastColor)
             }
 

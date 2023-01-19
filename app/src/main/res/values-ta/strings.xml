@@ -5,16 +5,16 @@
     <string name="edit">திருத்து</string>
     <string name="open_camera">படக்கருவியைத் திற</string>
     <string name="hidden">(மறைந்த)</string>
-    <string name="excluded">(விலக்கிய)</string>
+    <string name="excluded">(excluded)</string>
     <string name="pin_folder">அடைவை முள்ளிடு</string>
     <string name="unpin_folder">அடைவை முள்ளெடு</string>
     <string name="pin_to_the_top">மேலே முள்ளிடு</string>
-    <string name="show_all">எல்லா அடைவுகளின் உள்ளடக்கத்தைக் காட்டு</string>
+    <string name="show_all">எல்லா அடைவு உள்ளடக்கம் காட்டு</string>
     <string name="all_folders">எல்லா அடைவுகள்</string>
     <string name="folder_view">அடைவு பார்வைக்கு மாறு</string>
     <string name="other_folder">பிற அடைவு</string>
     <string name="show_on_map">வரைபடத்தில் காட்டு</string>
-    <string name="unknown_location">தெரியாத இடம்</string>
+    <string name="unknown_location">அறியா இடம்</string>
     <string name="volume">ஒலியளவு</string>
     <string name="brightness">ஒளிர்வு</string>
     <string name="lock_orientation">நோக்குநிலையைப் பூட்டு</string>
@@ -23,7 +23,7 @@
     <string name="force_portrait">உருவப்படத்தை வற்புறுத்து</string>
     <string name="force_landscape">அகலவாக்கை வற்புறுத்து</string>
     <string name="use_default_orientation">இயல்புநிலை நோக்குநிலையைப் பயன்படுத்து</string>
-    <string name="fix_date_taken">தேதி எடுத்த மதிப்பைச் சரிசெய்</string>
+    <string name="fix_date_taken">எடுத்த தேதி மதிப்பைச் சரிசெய்</string>
     <string name="fixing">சரிசெய்தல்…</string>
     <string name="dates_fixed_successfully">தேதிகள் சரிசெய்தல் வெற்றி</string>
     <string name="no_date_takens_found">தேதி எடுத்த மதிப்புகள் எதுவும் கண்டுபிடிக்கப்படவில்லை</string>
@@ -39,6 +39,8 @@
     <string name="set_as_default_folder">இயல்புநிலை அடைவாக அமை</string>
     <string name="unset_as_default_folder">இயல்புநிலை அடைவாக அமைக்காதே</string>
     <string name="reorder_by_dragging">பிடித்திழுத்து அடைவுகளை மறுசீரமை</string>
+    <string name="reorder_by_dragging_pro">பிடித்திழுத்து அடைவுகளை மறுசீரமை (Pro)</string>
+    <string name="restore_to_path">Restoring to \'%s\'</string>
     <!-- Filter -->
     <string name="filter_media">ஊடகத்தை வடிகட்டு</string>
     <string name="images">படங்கள்</string>
@@ -51,19 +53,15 @@
     <string name="change_filters_underlined"><u>வடிகட்டிகளை மாற்று</u></string>
     <!-- Hide / Exclude -->
     <string name="hide_folder_description">இச்செயல்பாடு ஒரு \'.nomedia\' கோப்பைச் சேர்த்து அடைவை மறைக்கிறது, இது எல்லா துணையடைவுகளையும் மறைக்கும். அமைப்புகளில் \'மறைந்த உருப்படிகளைக் காட்டு\' விருப்பத்தை மாற்றிஅவற்றைக் காணலாம். தொடரவா\?</string>
-    <string name="exclude">விலக்கு</string>
-    <string name="excluded_folders">விலக்கிய அடைவுகள்</string>
-    <string name="manage_excluded_folders">விலக்கிய அடைவுகளை நிர்வகி</string>
     <string name="exclude_folder_description">இது எளிய காட்சியகத்திலிருந்து தெரிவின் துணையடைவுகளுடன் அதை விலக்கும். அமைப்புகளில் விலக்கிய அடைவுகளை நீங்கள் நிர்வகிக்கலாம்.</string>
     <string name="exclude_folder_parent">பதிலாக ஒரு பெற்றோரை விலக்கவா\?</string>
     <string name="excluded_activity_placeholder">அடைவுகளை விலக்குதல், அவற்றின் துணையடைவுகளுடன் அவற்றை எளிய காட்சியகத்தில் மட்டுமே மறைக்கும், அவை பிற செயலிகளில் இன்னும் தெரியும்.
 \n
 \nபிற செயலிகளிலிருந்தும் அவற்றை மறைக்க, மறை செயல்பாட்டைப் பயன்படுத்து.</string>
-    <string name="remove_all">எல்லாம் நீக்கு</string>
-    <string name="remove_all_description">விலக்கப்பட்டவை பட்டியலிலிருந்து எல்லா அடைவுகளையும் நீக்கவா\? இது அடைவுகளை அழிக்காது.</string>
     <string name="hidden_folders">மறைத்த அடைவுகள்</string>
     <string name="manage_hidden_folders">மறைத்த அடைவுகளை நிர்வகி</string>
     <string name="hidden_folders_placeholder">உங்களிடம் \".nomedia\" கோப்புடன் எவ்வடைகளும் மறைக்கப்படவில்லை என தெரிகிறது.</string>
+    <string name="hidden_all_files">You have to grant the app All Files access to see hidden files, else it cannot work.</string>
     <!-- Include folders -->
     <string name="include_folders">உள்ளடக்கிய அடைவுகள்</string>
     <string name="manage_included_folders">உள்ளடக்கிய அடைவுகளை நிர்வகி</string>
@@ -73,7 +71,6 @@
 \nசில உருப்படிகளை இங்கே சேர்ப்பது வேறு எவ்வடைவையும் விலக்காது.</string>
     <string name="no_media_add_included">ஊடக கோப்புகள் ஏதுமில்லை. ஊடக கோப்புகளைக் கொண்ட அடைவுகளை கைமுறையாகச் சேர்த்து அதைத் தீர்க்கலாம்.</string>
     <!-- Resizing -->
-    <string name="resize">மறுஅளவிடு</string>
     <string name="resize_and_save">தெரிவை மறுஅளவிட்டுச் சேமி</string>
     <string name="width">அகலம்</string>
     <string name="height">உயரம்</string>
@@ -81,6 +78,8 @@
     <string name="invalid_values">செல்லத்தக்க தீர்மானத்தை உள்ளிடவும்</string>
     <!-- Editor -->
     <string name="editor">திருத்தி</string>
+    <string name="basic_editor">Basic Editor</string>
+    <string name="advanced_editor">Advanced Editor</string>
     <string name="rotate">சுழற்று</string>
     <string name="invalid_image_path">செல்லாத பட பாதை</string>
     <string name="invalid_video_path">செல்லாத காணொளி பாதை</string>
@@ -100,6 +99,9 @@
     <string name="rotate_left">இடதில் சுழற்று</string>
     <string name="rotate_right">வலதில் சுழற்று</string>
     <string name="rotate_one_eighty">180º சுழற்று</string>
+    <string name="transform">Transform</string>
+    <string name="crop">Crop</string>
+    <string name="draw">Draw</string>
     <string name="flip">புரட்டு</string>
     <string name="flip_horizontally">கிடைமட்டமாக புரட்டு</string>
     <string name="flip_vertically">செங்குத்தாக புரட்டு</string>
@@ -119,9 +121,10 @@
     <string name="home_screen">முகப்புத் திரை</string>
     <string name="lock_screen">பூட்டுத் திரை</string>
     <string name="home_and_lock_screen">முகப்பு மற்றும் பூட்டுத் திரை</string>
+    <string name="allow_changing_aspect_ratio">Allow changing the aspect ratio</string>
     <!-- Slideshow -->
     <string name="slideshow">வில்லைக்காட்சி</string>
-    <string name="interval">இடைவெளி (நொடிகள்):</string>
+    <string name="interval">இடைவெளி</string>
     <string name="include_photos">புகைப்படங்களை உள்ளடக்கு</string>
     <string name="include_videos">காணொளிகளை உள்ளடக்கு</string>
     <string name="include_gifs">GIFகளை உள்ளடக்கு</string>
@@ -205,6 +208,18 @@
     <string name="square">சதுரம்</string>
     <string name="rounded_corners">மழுங்கையான மூலைகள்</string>
     <string name="export_favorite_paths">பிடித்த கோப்பு பாதைகளை ஏற்றுமதி செய்</string>
+    <string name="import_favorite_paths">Import favorite file paths</string>
+    <string name="paths_imported_successfully">Paths imported successfully</string>
+    <string name="media_management_prompt">To make sure that all file operations work reliably, please make this app a Media management app in your device settings.</string>
+    <string name="password_protect_excluded">Password protect excluded folder visibility</string>
+    <string name="media_management_manual">Something went wrong, please go into your device Settings - Apps - Special app access - Media management apps and allow this app to manage media.</string>
+    <string name="media_management_note">If the redirection does not work, please go into your device Settings - Apps - Special app access - Media management apps and allow this app to manage media.</string>
+    <string name="media_management_alternative">If you do not want to do it, you can also go into your device Settings - Apps - Special app access - Media management apps and allow this app to manage media.</string>
+    <string name="alternative_media_access">Alternatively, you can allow accessing media files only. In that case you will not be able to work with hidden files though.</string>
+    <string name="media_only">Media only</string>
+    <string name="all_files">All files</string>
+    <string name="search_all_files">Search all files instead of folders on the main screen</string>
+    <string name="show_all_folders">Show a menu button for toggling Show All Folders Content quickly</string>
     <!-- Setting sections -->
     <string name="thumbnails">சிறுபடங்கள்</string>
     <string name="fullscreen_media">முழுத்திரை ஊடகம்</string>
@@ -328,13 +343,13 @@
     <string name="pesdk_common_title_pipettableColor">பைப்பேடபில் நிறம்</string>
     <string name="vesdk_video_trim_title_name">ஒழுங்கமை</string>
     <!-- FAQ -->
-    <string name="faq_1_title">எளிய காட்சியகத்தை இயல்புநிலை சாதன காட்சியகமாக மாற்றுவது எப்படி?</string>
+    <string name="faq_1_title">எளிய காட்சியகத்தை இயல்புநிலை சாதன காட்சியகமாக மாற்றுவது எப்படி\?</string>
     <string name="faq_1_text">முதலில் உங்கள் சாதன அமைப்புகளின் செயலிகள் பிரிவில் தற்போது இயல்புநிலை காட்சியகத்தைக் கண்டுபிடிக்க வேண்டும், \"இயல்புநிலையாகத் திற\" போன்றதைக் கூறும் பொத்தானைத் தேடு, அதைக் சொடுக்கி, \"இயல்புநிலைகளைத் துடை\" என்பதைத் தேர்ந்தெடு. அடுத்த முறை நீங்கள் ஒரு படத்தை அ காணொளியை திறக்க முயற்சிப்பீர்கள், நீங்கள் ஒரு செயலி எடுப்பியைப் பார்க்க வேண்டும், அங்கு நீங்கள் எளிய காட்சியகத்தை தேர்ந்தெடுத்து அதை இயல்புநிலை செயலியாக மாற்றலாம்.</string>
     <string name="faq_2_title">கடவுச்சொல்லுடன் செயலியைப் பூட்டினேன், ஆனால் அதை மறந்தேன். என்ன செய்வது\?</string>
     <string name="faq_2_text">நீங்கள் அதை 2 வழிகளில் தீர்க்கலாம். நீங்கள் செயலியை மறுநிறுவலாம் அ உங்கள் சாதன அமைப்புகளில் செயலியைக் கண்டுபிடித்து \"தரவைத் துடை\" என்பதைத் தேர்ந்தெடுக்கலாம். இது உங்கள் எல்லா அமைப்புகளையும் அகரமாக்கும், இது எந்த ஊடக கோப்புகளையும் நீக்காது.</string>
     <string name="faq_3_title">ஒரு தொகுப்பை எப்போதும் மேலே தோன்றச்செய்வது எப்படி\?</string>
     <string name="faq_3_text">நீங்கள் விரும்பிய தொகுப்பை நீண்டழுத்தி, செயல்கள் சிறுபட்டியில் பின் உருவடியைத் தேர்ந்தெடுக்கலாம், அது அதனை மேலே முள்ளிடும். நீங்கள் பல அடைவுகளையும் முள்ளிடலாம், முள்ளிட்ட உருப்படிகள் இயல்புநிலை வரிசையாக்க முறையால் வரிசைப்படுத்தப்படும்.</string>
-    <string name="faq_4_title">காணொளிகளை எவ்வாறு வேகமாக அனுப்புவது?</string>
+    <string name="faq_4_title">காணொளிகளை எவ்வாறு வேகமாக அனுப்புவது\?</string>
     <string name="faq_4_text">திரையின் பக்கத்தை இருமுறை தட்டியோ சீக்பார் அருகே தற்போதைய அ அதிகபட்ச கால நூல்களைத் தட்டியோ நீங்கள் இதைச் செய்யலாம். செயலி அமைப்புகளில் தனித்திரையில் காணொளிகளைத் திறக்க நீங்கள் இயக்கினால், கிடைமட்ட சைகைகளையும் பயன்படுத்தலாம்.</string>
     <string name="faq_5_title">ஒரு அடைவை மறைப்பதற்கும் விலக்குவதற்கும் என்ன வேறுபாடு\?</string>
     <string name="faq_5_text">விலக்கு எளிய காட்சியகத்தில் மட்டுமே அடைவைக் காண்பிப்பதைத் தடுக்கிறது, அதே சமயம் கணினி வாரியாக மறைக்கிறது, மேலும் இது மற்ற காட்சியகங்களிலிருந்தும் அடைவை மறைக்கிறது. கொடுக்கப்பட்ட அடைவில் வெற்று \".nomedia\" கோப்பை உருவாக்குவதன் மூலம் இது செயல்படுகிறது, அதை நீங்கள் எந்தக் கோப்பு நிர்வாகியுடனும் நீக்கலாம். படக்கருவி, திரைப்பிடிப்புகள் மற்றும் பதிவிறக்கங்கள் போன்ற அடைவுகளை மறைக்க சில சாதனங்கள் அனுமதிக்காது என்பதை நினைவில் கொள்க.</string>
@@ -356,71 +371,13 @@
     <string name="faq_14_text">பிரதான திரையில் \"தற்காலிகமாக மறைந்த உருப்படிகளைக் காண்பி\" சிறுபட்டி உருப்படியை அழுத்தவும் அ மறைந்த உருப்படியைக் காண செயலி அமைப்புகளில் \"மறைந்த உருப்படிகளைக் காட்டு\" என்பதை மாற்று. நீங்கள் அதை மறைக்க விரும்பினால், அதை நீண்டழுத்தி \"மறை\" என்பதைத் தேர்ந்தெடு. அடைவுகள் ஒரு மறைக்கப்பட்ட \".nomedia\" கோப்பைச் சேர்ப்பதால் மறைக்கப்படுகின்றன, நீங்கள் எந்த கோப்பு நிர்வாகியிடமும் கோப்பை அழிக்கலாம். மறைப்பது மீண்டும் மீண்டும் செயல்படுகிறது என்பதை நினைவில் கொள்க, எனவே நீங்கள் ஒரு அடைவை மறைத்தால், எல்லா துணையடைவுகளும் மறைக்கப்படும். எனவே துணையடைவுகளை மறைக்க நீங்கள் பெற்றோர் அடைவை மறைக்க வேண்டும்.</string>
     <string name="faq_15_title">செயலி ஏன் அதிக இடத்தை எடுத்துக்கொள்கிறது\?</string>
     <string name="faq_15_text">செயலி பதுக்ககம் 250MB வரை எடுக்கலாம், இது படத்தை விரைவாக ஏற்றுவதை உறுதி செய்கிறது. செயலி இன்னும் அதிக இடத்தை எடுத்துக்கொண்டால், மீள்சுழற்சி தொட்டியில் நீங்கள் உருப்படிகளை வைத்திருப்பதால் இது பெரும்பாலும் ஏற்படலாம். அந்த கோப்புகள் செயலி அளவிற்கு எண்ணப்படுகின்றன. மீள்சுழற்சி தொட்டியை அதனைத் திறந்து எல்லா கோப்புகளையும் அழித்தோ செயலி அமைவுகளிலிருந்து அழித்தோ துடைக்கலாம். தொட்டியில் உள்ள ஒவ்வொரு கோப்பும் 30 நாட்களுக்குப் பிறகு தானாகவே அழிக்கப்படும்.</string>
-    <string name="faq_16_title">What happened to file and folder hiding and why cannot I see hidden items anymore?</string>
+    <string name="faq_16_title">What happened to file and folder hiding and why cannot I see hidden items anymore\?</string>
     <string name="faq_16_text">Starting with Android 11 you cannot hide or unhide files or folders anymore, you cannot see the hidden ones in gallery apps either. You will have to use some file manager for that.</string>
-    <string name="faq_17_title">Why cannot I include missing folders anymore?</string>
+    <string name="faq_16_text_extra">Or you can also grant this gallery access to All Files through your device settings, that will allow us showing hidden items and make file operations more reliable in general.</string>
+    <string name="faq_17_title">Why cannot I include missing folders anymore\?</string>
     <string name="faq_17_text">That stopped working due to the system changes that came with Android 11 too, the app cannot browse real folders anymore, it relies on the so called MediaStore at fetching data.</string>
-    <!-- Strings displayed only on Google Playstore. Optional, but good to have -->
-    <!-- App title has to have less than 50 characters. If you cannot squeeze it, just remove a part of it -->
-    <string name="app_title">எளிய காட்சியகம் ப்ரோ - பட நிர்வாகி &amp; திருத்தி</string>
-    <!-- Short description has to have less than 80 chars -->
-    <string name="app_short_description">விளம்பரங்களின்றி உம் புகைப்படங்கள், காணொளிகள், GIFகளை நிர்வகிப்பதற்கும் திருத்துவதற்கும் ஓர் உயர்தரச் செயலி</string>
-    <string name="app_long_description">
-        Simple Gallery Pro is a highly customizable offline gallery. Organize &amp; edit your photos, recover deleted files with the recycle bin, protect &amp; hide files and view a huge variety of different photo &amp; video formats including RAW, SVG and much more.
-
-        The app contains no ads and unnecessary permissions. As the app doesn’t require internet access either, your privacy is protected.
-
-        -------------------------------------------------
-        <b>SIMPLE GALLERY PRO – FEATURES</b>
-        -------------------------------------------------
-
-        • Offline gallery with no ads or popups
-        • Simple gallery photo editor – crop, rotate, resize, draw, filters &amp; more
-        • No internet access needed, giving you more privacy and security
-        • No unnecessary permissions required
-        • Quickly search images, videos &amp; files
-        • Open &amp; view many different photo and video types (RAW, SVG, panoramic etc)
-        • A variety of intuitive gestures to easily edit &amp; organize files
-        • Lots of ways to filter, group &amp; sort files
-        • Customize the appearance of Simple Gallery Pro
-        • Available in 32 languages
-        • Mark files as favorites for quick access
-        • Protect your photos &amp; videos with a pattern, pin or fingerprint
-        • Use pin, pattern &amp; fingerprint to protect the app launch or specific functions too
-        • Recover deleted photos &amp; videos from the recycle bin
-        • Toggle visibility of files to hide photos &amp; videos
-        • Create a customizable slideshow of your files
-        • View detailed information of your files (resolution, EXIF values etc)
-        • Simple Gallery Pro is open source
-        … and much much more!
-
-        <b>PHOTO GALLERY EDITOR</b>
-        Simple Gallery Pro makes it easy to edit your pictures on the fly. Crop, flip, rotate and resize your pictures. If you’re feeling a little more creative you can add filters and draw on your pictures!
-
-        <b>SUPPORT FOR MANY FILE TYPES</b>
-        Unlike some other gallery viewers &amp; photo organizers, Simple Gallery Pro supports a huge range of different file types including JPEG, PNG, MP4, MKV, RAW, SVG, Panoramic photos, Panoramic videos and many more.
-
-        <b>HIGHLY CUSTOMIZABLE GALLERY MANAGER</b>
-        From the UI to the function buttons on the bottom toolbar, Simple Gallery Pro is highly customizable and works the way you want it to. No other gallery manager has this kind of flexibility! Thanks to being open source, we’re also available in 32 languages!
-
-        <b>RECOVER DELETED PHOTOS &amp; VIDEOS</b>
-        Accidentally deleted a precious photo or video? Don’t worry! Simple Gallery Pro features a handy recycle bin where you can recover deleted photos &amp; videos easily.
-
-        <b>PROTECT &amp; HIDE PHOTOS, VIDEOS &amp; FILES</b>
-        Using pin, pattern or your device’s fingerprint scanner you can protect and hide photos, videos &amp; entire albums. You can protect the app itself or place locks on specific functions of the app. For example, you can’t delete a file without a fingerprint scan, helping to protect your files from accidental deletion.
-
-        <b>Check out the full suite of Simple Tools here:</b>
-        https://www.simplemobiletools.com
-
-        <b>Standalone website of Simple Gallery Pro:</b>
-        https://www.simplemobiletools.com/gallery
-
-        <b>Facebook:</b>
-        https://www.facebook.com/simplemobiletools
-
-        <b>Reddit:</b>
-        https://www.reddit.com/r/SimpleMobileTools
-    </string>
+    <string name="faq_18_title">Why do I see ads during video playback\?</string>
+    <string name="faq_18_text">Our apps have no ads whatsoever. If you see them during video playback, you must be using some other apps video player. Try finding your default video player in the device settings, then do a \"Clear defaults\" on it. The next time you invoke some video intent you will see an app picker prompt, where you can select what app you want to use.</string>
     <!--
         Haven't found some strings? There's more at
         https://github.com/SimpleMobileTools/Simple-Commons/tree/master/commons/src/main/res

@@ -9,16 +9,14 @@ import android.os.Bundle
 import android.provider.MediaStore
 import androidx.exifinterface.media.ExifInterface
 import com.simplemobiletools.commons.extensions.*
-import com.simplemobiletools.commons.helpers.PERMISSION_WRITE_STORAGE
-import com.simplemobiletools.commons.helpers.REAL_FILE_PATH
-import com.simplemobiletools.commons.helpers.ensureBackgroundThread
-import com.simplemobiletools.commons.helpers.isNougatPlus
+import com.simplemobiletools.commons.helpers.*
 import com.simplemobiletools.commons.models.FileDirItem
 import com.simplemobiletools.gallery.pro.R
 import com.simplemobiletools.gallery.pro.dialogs.SaveAsDialog
 import com.simplemobiletools.gallery.pro.extensions.config
 import com.simplemobiletools.gallery.pro.extensions.fixDateTaken
 import com.simplemobiletools.gallery.pro.extensions.tryDeleteFileDirItem
+import com.simplemobiletools.gallery.pro.helpers.getPermissionToRequest
 import ly.img.android.pesdk.VideoEditorSettingsList
 import ly.img.android.pesdk.assets.filter.basic.FilterPackBasic
 import ly.img.android.pesdk.assets.font.basic.FontPackBasic
@@ -39,7 +37,6 @@ import ly.img.android.pesdk.ui.panels.item.PersonalStickerAddItem
 import ly.img.android.pesdk.ui.panels.item.ToggleAspectItem
 import java.io.File
 import java.io.InputStream
-import java.io.OutputStream
 
 class NewVideoEditActivity : SimpleActivity() {
     private val VESDK_EDIT_VIDEO = 1
@@ -60,7 +57,7 @@ class NewVideoEditActivity : SimpleActivity() {
             return
         }
 
-        handlePermission(PERMISSION_WRITE_STORAGE) {
+        handlePermission(getPermissionToRequest()) {
             if (it) {
                 initEditActivity()
             } else {
@@ -110,6 +107,7 @@ class NewVideoEditActivity : SimpleActivity() {
             val extras = resultData?.extras
             val resultPath = extras?.get(RESULT_URI)?.toString() ?: ""
             val sourcePath = Uri.decode(extras?.get(SOURCE_URI)?.toString() ?: "")
+
             val settings = extras?.getParcelable<SettingsList>(SETTINGS_LIST)
             if (settings != null) {
                 val brush = settings.getSettingsModel(BrushSettings::class.java)
@@ -140,15 +138,14 @@ class NewVideoEditActivity : SimpleActivity() {
                                 sourceFileLastModified = File(source).lastModified()
 
                                 handleFileOverwriting(destinationFilePath) {
-                                    var inputStream: InputStream? = null
-                                    var outputStream: OutputStream? = null
                                     try {
-                                        inputStream = contentResolver.openInputStream(Uri.parse(resultPath))
-                                        outputStream = getFileOutputStreamSync(destinationFilePath, destinationFilePath.getMimeType())
-                                        inputStream!!.copyTo(outputStream!!)
-                                        outputStream.flush()
-                                        inputStream.close()
-                                        outputStream.close()
+                                        val inputStream = contentResolver.openInputStream(Uri.parse(resultPath))
+                                        val outputStream = getFileOutputStreamSync(destinationFilePath, destinationFilePath.getMimeType())
+                                        inputStream?.use {
+                                            outputStream?.use {
+                                                inputStream.copyTo(outputStream)
+                                            }
+                                        }
 
                                         if (config.keepLastModified) {
                                             // add 1 s to the last modified time to properly update the thumbnail
@@ -156,18 +153,15 @@ class NewVideoEditActivity : SimpleActivity() {
                                         }
 
                                         val paths = arrayListOf(destinationFilePath)
-                                        rescanPaths(arrayListOf(destinationFilePath)) {
+                                        rescanPaths(paths) {
                                             fixDateTaken(paths, false)
-                                        }
 
-                                        setResult(Activity.RESULT_OK, intent)
-                                        toast(R.string.file_edited_successfully)
-                                        finish()
+                                            setResult(Activity.RESULT_OK)
+                                            toast(R.string.file_edited_successfully)
+                                            finish()
+                                        }
                                     } catch (e: Exception) {
                                         showErrorToast(e)
-                                    } finally {
-                                        inputStream?.close()
-                                        outputStream?.close()
                                     }
                                 }
                             }
@@ -198,7 +192,7 @@ class NewVideoEditActivity : SimpleActivity() {
 
     // In case the user wants to overwrite the original file and it is on an SD card, delete it manually first. Else the system just appends (1)
     private fun handleFileOverwriting(path: String, callback: () -> Unit) {
-        if (getDoesFilePathExist(path) && isPathOnSD(path)) {
+        if (!isRPlus() && getDoesFilePathExist(path) && isPathOnSD(path)) {
             val fileDirItem = FileDirItem(path, path.getFilenameFromPath())
             tryDeleteFileDirItem(fileDirItem, false, true) { success ->
                 if (success) {
@@ -225,10 +219,12 @@ class NewVideoEditActivity : SimpleActivity() {
         VideoEditorBuilder(this)
             .setSettingsList(settingsList)
             .startActivityForResult(this, VESDK_EDIT_VIDEO)
+
+        settingsList.release()
     }
 
     private fun createVesdkSettingsList(): VideoEditorSettingsList {
-        val settingsList = VideoEditorSettingsList().apply {
+        val settingsList = VideoEditorSettingsList(false).apply {
             configure<UiConfigFilter> {
                 it.setFilterList(FilterPackBasic.getFilterPack())
             }
@@ -277,10 +273,15 @@ class NewVideoEditActivity : SimpleActivity() {
                 )
             }
 
-            getSettingsModel(UiConfigTheme::class.java).theme = R.style.Imgly_Theme_NoFullscreen
+            val theme = if (isUsingSystemDarkTheme()) {
+                R.style.Theme_Imgly_NoFullscreen
+            } else {
+                R.style.Theme_Imgly_Light_NoFullscreen
+            }
+
+            getSettingsModel(UiConfigTheme::class.java).theme = theme
 
             configure<VideoEditorSaveSettings> {
-                it.allowFastTrim = true
                 it.allowOrientationMatrixMetadata = true
                 it.setOutputToTemp()
                 it.outputMode = OutputMode.EXPORT_IF_NECESSARY

@@ -1,6 +1,7 @@
 package com.simplemobiletools.gallery.pro.dialogs
 
 import android.view.KeyEvent
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import com.simplemobiletools.commons.activities.BaseSimpleActivity
@@ -15,10 +16,15 @@ import com.simplemobiletools.gallery.pro.models.Directory
 import kotlinx.android.synthetic.main.dialog_directory_picker.view.*
 
 class PickDirectoryDialog(
-    val activity: BaseSimpleActivity, val sourcePath: String, showOtherFolderButton: Boolean, val showFavoritesBin: Boolean,
+    val activity: BaseSimpleActivity,
+    val sourcePath: String,
+    showOtherFolderButton: Boolean,
+    val showFavoritesBin: Boolean,
+    val isPickingCopyMoveDestination: Boolean,
+    val isPickingFolderForWidget: Boolean,
     val callback: (path: String) -> Unit
 ) {
-    private var dialog: AlertDialog
+    private var dialog: AlertDialog? = null
     private var shownDirectories = ArrayList<Directory>()
     private var allDirectories = ArrayList<Directory>()
     private var openedSubfolders = arrayListOf("")
@@ -33,9 +39,9 @@ class PickDirectoryDialog(
             spanCount = if (isGridViewType) activity.config.dirColumnCnt else 1
         }
 
-        view.directories_fastscroller.updateColors(activity.getAdjustedPrimaryColor())
+        view.directories_fastscroller.updateColors(activity.getProperPrimaryColor())
 
-        val builder = AlertDialog.Builder(activity)
+        val builder = activity.getAlertDialogBuilder()
             .setPositiveButton(R.string.ok, null)
             .setNegativeButton(R.string.cancel, null)
             .setOnKeyListener { dialogInterface, i, keyEvent ->
@@ -49,8 +55,9 @@ class PickDirectoryDialog(
             builder.setNeutralButton(R.string.other_folder) { dialogInterface, i -> showOtherFolder() }
         }
 
-        dialog = builder.create().apply {
-            activity.setupDialogStuff(view, this, R.string.select_destination) {
+        builder.apply {
+            activity.setupDialogStuff(view, this, R.string.select_destination) { alertDialog ->
+                dialog = alertDialog
                 view.directories_show_hidden.beVisibleIf(!context.config.shouldShowHidden)
                 view.directories_show_hidden.setOnClickListener {
                     activity.handleHiddenFolderPasswordProtection {
@@ -65,8 +72,8 @@ class PickDirectoryDialog(
         fetchDirectories(false)
     }
 
-    private fun fetchDirectories(forceShowHidden: Boolean) {
-        activity.getCachedDirectories(forceShowHidden = forceShowHidden) {
+    private fun fetchDirectories(forceShowHiddenAndExcluded: Boolean) {
+        activity.getCachedDirectories(forceShowHidden = forceShowHiddenAndExcluded, forceShowExcluded = forceShowHiddenAndExcluded) {
             if (it.isNotEmpty()) {
                 it.forEach {
                     it.subfoldersMediaCount = it.mediaCnt
@@ -80,7 +87,7 @@ class PickDirectoryDialog(
     }
 
     private fun showOtherFolder() {
-        FilePickerDialog(activity, sourcePath, false, showHidden, true, true) {
+        FilePickerDialog(activity, sourcePath, !isPickingCopyMoveDestination && !isPickingFolderForWidget, showHidden, true, true) {
             activity.handleLockedFolderOpening(it) { success ->
                 if (success) {
                     callback(it)
@@ -107,8 +114,11 @@ class PickDirectoryDialog(
             val clickedDir = it as Directory
             val path = clickedDir.path
             if (clickedDir.subfoldersCount == 1 || !activity.config.groupDirectSubfolders) {
-                if (path.trimEnd('/') == sourcePath) {
+                if (isPickingCopyMoveDestination && path.trimEnd('/') == sourcePath) {
                     activity.toast(R.string.source_and_destination_same)
+                    return@DirectoryAdapter
+                } else if (isPickingCopyMoveDestination && activity.isRestrictedWithSAFSdk30(path) && !activity.isInDownloadDir(path)) {
+                    activity.toast(R.string.system_folder_copy_restriction, Toast.LENGTH_LONG)
                     return@DirectoryAdapter
                 } else {
                     activity.handleLockedFolderOpening(path) { success ->
@@ -116,7 +126,7 @@ class PickDirectoryDialog(
                             callback(path)
                         }
                     }
-                    dialog.dismiss()
+                    dialog?.dismiss()
                 }
             } else {
                 currentPathPrefix = path
@@ -135,14 +145,14 @@ class PickDirectoryDialog(
     private fun backPressed() {
         if (activity.config.groupDirectSubfolders) {
             if (currentPathPrefix.isEmpty()) {
-                dialog.dismiss()
+                dialog?.dismiss()
             } else {
-                openedSubfolders.removeAt(openedSubfolders.size - 1)
+                openedSubfolders.removeLast()
                 currentPathPrefix = openedSubfolders.last()
                 gotDirectories(allDirectories)
             }
         } else {
-            dialog.dismiss()
+            dialog?.dismiss()
         }
     }
 }

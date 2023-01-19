@@ -52,8 +52,6 @@ import kotlinx.android.synthetic.main.directory_item_list.view.dir_holder
 import kotlinx.android.synthetic.main.directory_item_list.view.photo_cnt
 import java.io.File
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 class DirectoryAdapter(
     activity: BaseSimpleActivity, var dirs: ArrayList<Directory>, val listener: DirectoryOperationsListener?, recyclerView: MyRecyclerView,
@@ -194,8 +192,11 @@ class DirectoryAdapter(
     }
 
     private fun checkHideBtnVisibility(menu: Menu, selectedPaths: ArrayList<String>) {
-        menu.findItem(R.id.cab_hide).isVisible = !isRPlus() && selectedPaths.any { !it.doesThisOrParentHaveNoMedia(HashMap(), null) }
-        menu.findItem(R.id.cab_unhide).isVisible = !isRPlus() && selectedPaths.any { it.doesThisOrParentHaveNoMedia(HashMap(), null) }
+        menu.findItem(R.id.cab_hide).isVisible =
+            (!isRPlus() || isExternalStorageManager()) && selectedPaths.any { !it.doesThisOrParentHaveNoMedia(HashMap(), null) }
+
+        menu.findItem(R.id.cab_unhide).isVisible =
+            (!isRPlus() || isExternalStorageManager()) && selectedPaths.any { it.doesThisOrParentHaveNoMedia(HashMap(), null) }
     }
 
     private fun checkPinBtnVisibility(menu: Menu, selectedPaths: ArrayList<String>) {
@@ -265,7 +266,7 @@ class DirectoryAdapter(
                             updateDirs(dirs)
                             ensureBackgroundThread {
                                 try {
-                                    activity.directoryDao.updateDirectoryAfterRename(firstDir.tmb, firstDir.name, firstDir.path, sourcePath)
+                                    activity.directoryDB.updateDirectoryAfterRename(firstDir.tmb, firstDir.name, firstDir.path, sourcePath)
                                     listener?.refreshItems()
                                 } catch (e: Exception) {
                                     activity.showErrorToast(e)
@@ -552,6 +553,7 @@ class DirectoryAdapter(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun createShortcut() {
         val manager = activity.getSystemService(ShortcutManager::class.java)
         if (manager.isRequestPinShortcutSupported) {
@@ -626,36 +628,42 @@ class DirectoryAdapter(
                 return@handleSAFDialog
             }
 
-            var foldersToDelete = ArrayList<File>(selectedKeys.size)
-            selectedDirs.forEach {
-                if (it.areFavorites() || it.isRecycleBin()) {
-                    if (it.isRecycleBin()) {
-                        tryEmptyRecycleBin(false)
+            activity.handleSAFDialogSdk30(SAFPath) {
+                if (!it) {
+                    return@handleSAFDialogSdk30
+                }
+
+                var foldersToDelete = ArrayList<File>(selectedKeys.size)
+                selectedDirs.forEach {
+                    if (it.areFavorites() || it.isRecycleBin()) {
+                        if (it.isRecycleBin()) {
+                            tryEmptyRecycleBin(false)
+                        } else {
+                            ensureBackgroundThread {
+                                activity.mediaDB.clearFavorites()
+                                activity.favoritesDB.clearFavorites()
+                                listener?.refreshItems()
+                            }
+                        }
+
+                        if (selectedKeys.size == 1) {
+                            finishActMode()
+                        }
                     } else {
-                        ensureBackgroundThread {
-                            activity.mediaDB.clearFavorites()
-                            activity.favoritesDB.clearFavorites()
-                            listener?.refreshItems()
+                        foldersToDelete.add(File(it.path))
+                    }
+                }
+
+                if (foldersToDelete.size == 1) {
+                    activity.handleLockedFolderOpening(foldersToDelete.first().absolutePath) { success ->
+                        if (success) {
+                            listener?.deleteFolders(foldersToDelete)
                         }
                     }
-
-                    if (selectedKeys.size == 1) {
-                        finishActMode()
-                    }
                 } else {
-                    foldersToDelete.add(File(it.path))
+                    foldersToDelete = foldersToDelete.filter { !config.isFolderProtected(it.absolutePath) }.toMutableList() as ArrayList<File>
+                    listener?.deleteFolders(foldersToDelete)
                 }
-            }
-
-            if (foldersToDelete.size == 1) {
-                activity.handleLockedFolderOpening(foldersToDelete.first().absolutePath) { success ->
-                    if (success) {
-                        listener?.deleteFolders(foldersToDelete)
-                    }
-                }
-            } else {
-                foldersToDelete = foldersToDelete.filter { !config.isFolderProtected(it.absolutePath) }.toMutableList() as ArrayList<File>
-                listener?.deleteFolders(foldersToDelete)
             }
         }
     }
@@ -755,7 +763,7 @@ class DirectoryAdapter(
 
             dir_check?.beVisibleIf(isSelected)
             if (isSelected) {
-                dir_check.background?.applyColorFilter(adjustedPrimaryColor)
+                dir_check.background?.applyColorFilter(properPrimaryColor)
                 dir_check.applyColorFilter(contrastColor)
             }
 
@@ -783,8 +791,8 @@ class DirectoryAdapter(
 
             if (lockedFolderPaths.contains(directory.path)) {
                 dir_lock.beVisible()
-                dir_lock.background = ColorDrawable(config.backgroundColor)
-                dir_lock.applyColorFilter(config.backgroundColor.getContrastColor())
+                dir_lock.background = ColorDrawable(context.getProperBackgroundColor())
+                dir_lock.applyColorFilter(context.getProperBackgroundColor().getContrastColor())
             } else {
                 dir_lock.beGone()
                 val roundedCorners = when {

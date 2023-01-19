@@ -1,6 +1,165 @@
 Changelog
 ==========
 
+Version 6.26.1 *(2023-01-12)*
+----------------------------
+
+ * Added some Search related fixes on lower OS versions
+
+Version 6.26.0 *(2023-01-11)*
+----------------------------
+
+ * Use Material You design by default on Android 12+
+ * Increased minimal required Android OS version to 6
+ * Allow choosing between the basic and advanced photo editor
+ * Added a menu button for quick toggle between Folders and All Files views
+ * Added a setting for always searching all device files from the main screen
+ * Allow showing excluded folders at the destination picker too
+ * Added many translation, stability, UX and UI improvements
+
+Version 6.25.5 *(2022-11-22)*
+----------------------------
+
+ * Always show the hidden item display button, just require All Files for it
+ * Added some translation, stability and UX improvements
+
+Version 6.25.4 *(2022-10-17)*
+----------------------------
+
+ * Restored the All Files permission, mostly related to hidden files
+ * Added some translation, stability and UX improvements
+
+Version 6.25.3 *(2022-10-14)*
+----------------------------
+
+ * Restored the All Files permission, mostly related to hidden files
+ * Added some translation, stability and UX improvements
+
+Version 6.25.1 *(2022-10-03)*
+----------------------------
+
+ * Updated the photo/video editor
+ * Adding a Get Simple Phone button into the About section
+ * Added some translation and UX improvements
+
+Version 6.25.0 *(2022-09-03)*
+----------------------------
+
+ * Added Monochrome icon and Language picker support on Android 13+
+ * Added some translation and UX improvements
+
+Version 6.24.1 *(2022-08-01)*
+----------------------------
+
+ * Fixed the top Menu at All files search
+
+Version 6.24.0 *(2022-07-30)*
+----------------------------
+
+ * Fixed a glitch with video editor saving corrupt files
+ * Adding some materialish elements, especially in System default theme
+ * Added some stability, translation and UX improvements
+
+Version 6.23.13 *(2022-07-06)*
+----------------------------
+
+ * Fixed swiping fullscreen media from videos
+ * Added some stability, translation and UX improvements
+
+Version 6.23.12 *(2022-06-23)*
+----------------------------
+
+ * Fixed some renaming and moving issues
+ * Allow using custom aspect ratio at wallpaper setter
+ * Fix a glitch with wrong file being shown at fullscreen view
+ * Added some stability, translation and UX improvements
+
+Version 6.23.11 *(2022-06-07)*
+----------------------------
+
+ * Fixed a crash at third party intent file picker
+
+Version 6.23.10 *(2022-06-06)*
+----------------------------
+
+ * Allow temporarily showing excluded folders on Android 11+, if hiding is unavailable
+ * Fixed the Indonesian translation
+ * Fixed the performance of copy/move onto SD cards
+ * Added some translation and stability improvements
+
+Version 6.23.9 *(2022-06-01)*
+----------------------------
+
+ * Fixed some sorting by Date Taken related issues
+ * Fixed some file operation related glitches
+ * Added some stability, translation and UX improvements
+
+Version 6.23.8 *(2022-05-25)*
+----------------------------
+
+ * Allow creating new folders from the main screen too
+ * Fixed some file operation related issues
+ * Show the size of items that are going to be deleted at confirmation
+ * Reverted the photo/video editor to fix video editing
+ * Fixed Indonesian translation
+ * Added some translation and stability improvements
+
+Version 6.23.7 *(2022-05-16)*
+----------------------------
+
+ * Fixed a glitch with deleting files from fullscreen view
+ * Added some stability and translation improvements
+
+Version 6.23.6 *(2022-05-14)*
+----------------------------
+
+ * Fixed a glitch with device freezing at deleting multiple files at once
+ * Properly handle deleting the last file in a folder
+ * Restore previous way of handling hidden and included folders in FOSS app version, not Google Play
+ * Added some stability, translation and UX improvements
+
+Version 6.23.5 *(2022-05-05)*
+----------------------------
+
+ * Fixed renaming SD card files on Android 12
+
+Version 6.23.4 *(2022-05-04)*
+----------------------------
+
+ * Fixed a copying related glitch on Android 12
+ * Added some stability and translation improvements
+
+Version 6.23.3 *(2022-05-03)*
+----------------------------
+
+ * Show proper Last Modified value after file moving
+ * Fix some wallpaper setting related glitches
+ * Make sure Fix Date Taken values works on Android 11+
+ * Added some stability and translation improvements
+
+Version 6.23.2 *(2022-05-01)*
+----------------------------
+
+ * Simplify some file operations on Android 12+, if the gallery is set as a Media Management app
+ * Added .avif support on Android 12
+ * Allow setting both landscape and portrait wallpapers
+ * Added some translation, stability and UX improvements
+
+Version 6.23.1 *(2022-04-16)*
+----------------------------
+
+ * Fixed some file operations on Android 10 and 11
+ * Restore Recycle bin files in Pictures, if the original folder is inaccessible
+
+Version 6.23.0 *(2022-04-15)*
+----------------------------
+
+ * Mark favorited file thumbnails
+ * Added an Auto and Material You theme on Android 12+
+ * Changed some file operations to comply with the latest Google permissions policy, apps like this can no longer show hidden items on Android 11+
+ * Properly delete items in the recycle bin after 30 days
+ * Added many other stability, translation, performance, UX and UI improvements
+
 Version 6.22.3 *(2021-12-19)*
 ----------------------------
 

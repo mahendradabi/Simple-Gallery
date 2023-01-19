@@ -1,17 +1,13 @@
 package com.simplemobiletools.gallery.pro.dialogs
 
 import android.content.DialogInterface
-import android.view.View
 import android.widget.RelativeLayout
-import androidx.appcompat.app.AlertDialog
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
 import com.simplemobiletools.commons.activities.BaseSimpleActivity
-import com.simplemobiletools.commons.extensions.beGone
-import com.simplemobiletools.commons.extensions.beVisible
-import com.simplemobiletools.commons.extensions.setupDialogStuff
+import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.gallery.pro.R
 import com.simplemobiletools.gallery.pro.extensions.config
 import com.simplemobiletools.gallery.pro.helpers.*
@@ -20,17 +16,15 @@ import kotlinx.android.synthetic.main.directory_item_grid_square.view.*
 
 class ChangeFolderThumbnailStyleDialog(val activity: BaseSimpleActivity, val callback: () -> Unit) : DialogInterface.OnClickListener {
     private var config = activity.config
-    private var view: View
+    private var view = activity.layoutInflater.inflate(R.layout.dialog_change_folder_thumbnail_style, null).apply {
+        dialog_folder_limit_title.isChecked = config.limitFolderTitle
+    }
 
     init {
-        view = activity.layoutInflater.inflate(R.layout.dialog_change_folder_thumbnail_style, null).apply {
-            dialog_folder_limit_title.isChecked = config.limitFolderTitle
-        }
-
-        AlertDialog.Builder(activity)
+        activity.getAlertDialogBuilder()
             .setPositiveButton(R.string.ok, this)
             .setNegativeButton(R.string.cancel, null)
-            .create().apply {
+            .apply {
                 activity.setupDialogStuff(view, this) {
                     setupStyle()
                     setupMediaCount()
@@ -106,8 +100,8 @@ class ChangeFolderThumbnailStyleDialog(val activity: BaseSimpleActivity, val cal
             if (useRoundedCornersLayout) {
                 val cornerRadius = resources.getDimension(R.dimen.rounded_corner_radius_big).toInt()
                 builder = builder.transform(CenterCrop(), RoundedCorners(cornerRadius))
-                dir_name.setTextColor(activity.config.textColor)
-                photo_cnt.setTextColor(activity.config.textColor)
+                dir_name.setTextColor(activity.getProperTextColor())
+                photo_cnt.setTextColor(activity.getProperTextColor())
             }
 
             builder.into(dir_thumbnail)

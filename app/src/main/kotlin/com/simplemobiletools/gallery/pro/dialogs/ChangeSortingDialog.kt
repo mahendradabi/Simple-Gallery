@@ -2,12 +2,8 @@ package com.simplemobiletools.gallery.pro.dialogs
 
 import android.content.DialogInterface
 import android.view.View
-import androidx.appcompat.app.AlertDialog
 import com.simplemobiletools.commons.activities.BaseSimpleActivity
-import com.simplemobiletools.commons.extensions.beGoneIf
-import com.simplemobiletools.commons.extensions.beVisibleIf
-import com.simplemobiletools.commons.extensions.isVisible
-import com.simplemobiletools.commons.extensions.setupDialogStuff
+import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.helpers.*
 import com.simplemobiletools.gallery.pro.R
 import com.simplemobiletools.gallery.pro.extensions.config
@@ -38,10 +34,10 @@ class ChangeSortingDialog(
             sorting_dialog_radio_custom.beVisibleIf(isDirectorySorting)
         }
 
-        AlertDialog.Builder(activity)
+        activity.getAlertDialogBuilder()
             .setPositiveButton(R.string.ok, this)
             .setNegativeButton(R.string.cancel, null)
-            .create().apply {
+            .apply {
                 activity.setupDialogStuff(view, this, R.string.sort_by)
             }
 
@@ -56,9 +52,9 @@ class ChangeSortingDialog(
             view.sorting_dialog_numeric_sorting.beVisibleIf(isSortingByNameOrPath)
             view.use_for_this_folder_divider.beVisibleIf(view.sorting_dialog_numeric_sorting.isVisible() || view.sorting_dialog_use_for_this_folder.isVisible())
 
-            val isCustomSorting = checkedId == sortingRadio.sorting_dialog_radio_custom.id
-            view.sorting_dialog_radio_order.beGoneIf(isCustomSorting)
-            view.sorting_dialog_order_divider.beGoneIf(isCustomSorting)
+            val hideSortOrder = checkedId == sortingRadio.sorting_dialog_radio_custom.id || checkedId == sortingRadio.sorting_dialog_radio_random.id
+            view.sorting_dialog_radio_order.beGoneIf(hideSortOrder)
+            view.sorting_dialog_order_divider.beGoneIf(hideSortOrder)
         }
 
         val sortBtn = when {

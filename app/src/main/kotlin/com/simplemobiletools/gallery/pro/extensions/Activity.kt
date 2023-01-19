@@ -12,9 +12,11 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.provider.MediaStore
 import android.provider.MediaStore.Files
 import android.provider.MediaStore.Images
+import android.provider.Settings
 import android.util.DisplayMetrics
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -25,6 +27,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.simplemobiletools.commons.activities.BaseSimpleActivity
 import com.simplemobiletools.commons.dialogs.ConfirmationDialog
+import com.simplemobiletools.commons.dialogs.SecurityDialog
 import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.helpers.*
 import com.simplemobiletools.commons.models.FAQItem
@@ -33,14 +36,12 @@ import com.simplemobiletools.gallery.pro.BuildConfig
 import com.simplemobiletools.gallery.pro.R
 import com.simplemobiletools.gallery.pro.activities.SettingsActivity
 import com.simplemobiletools.gallery.pro.activities.SimpleActivity
+import com.simplemobiletools.gallery.pro.dialogs.AllFilesPermissionDialog
 import com.simplemobiletools.gallery.pro.dialogs.PickDirectoryDialog
 import com.simplemobiletools.gallery.pro.helpers.RECYCLE_BIN
 import com.simplemobiletools.gallery.pro.models.DateTaken
 import com.squareup.picasso.Picasso
-import java.io.File
-import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.OutputStream
+import java.io.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -104,15 +105,19 @@ fun SimpleActivity.launchAbout() {
         FAQItem(R.string.faq_13_title, R.string.faq_13_text),
         FAQItem(R.string.faq_15_title, R.string.faq_15_text),
         FAQItem(R.string.faq_2_title, R.string.faq_2_text),
-        FAQItem(R.string.faq_2_title_commons, R.string.faq_2_text_commons),
-        FAQItem(R.string.faq_6_title_commons, R.string.faq_6_text_commons),
-        FAQItem(R.string.faq_7_title_commons, R.string.faq_7_text_commons),
+        FAQItem(R.string.faq_18_title, R.string.faq_18_text),
         FAQItem(R.string.faq_9_title_commons, R.string.faq_9_text_commons),
-        FAQItem(R.string.faq_10_title_commons, R.string.faq_10_text_commons)
     )
 
-    if (isRPlus()) {
-        faqItems.add(0, FAQItem(R.string.faq_16_title, R.string.faq_16_text))
+    if (!resources.getBoolean(R.bool.hide_google_relations)) {
+        faqItems.add(FAQItem(R.string.faq_2_title_commons, R.string.faq_2_text_commons))
+        faqItems.add(FAQItem(R.string.faq_6_title_commons, R.string.faq_6_text_commons))
+        faqItems.add(FAQItem(R.string.faq_7_title_commons, R.string.faq_7_text_commons))
+        faqItems.add(FAQItem(R.string.faq_10_title_commons, R.string.faq_10_text_commons))
+    }
+
+    if (isRPlus() && !isExternalStorageManager()) {
+        faqItems.add(0, FAQItem(R.string.faq_16_title, "${getString(R.string.faq_16_text)} ${getString(R.string.faq_16_text_extra)}"))
         faqItems.add(1, FAQItem(R.string.faq_17_title, R.string.faq_17_text))
         faqItems.removeIf { it.text == R.string.faq_7_text }
         faqItems.removeIf { it.text == R.string.faq_14_text }
@@ -122,21 +127,61 @@ fun SimpleActivity.launchAbout() {
     startAboutActivity(R.string.app_name, licenses, BuildConfig.VERSION_NAME, faqItems, true)
 }
 
-fun AppCompatActivity.showSystemUI(toggleActionBarVisibility: Boolean) {
-    if (toggleActionBarVisibility) {
-        supportActionBar?.show()
-    }
+fun BaseSimpleActivity.handleMediaManagementPrompt(callback: () -> Unit) {
+    if (canManageMedia() || isExternalStorageManager()) {
+        callback()
+    } else if (isRPlus() && resources.getBoolean(R.bool.require_all_files_access) && !config.avoidShowingAllFilesPrompt) {
+        if (Environment.isExternalStorageManager()) {
+            callback()
+        } else {
+            var messagePrompt = getString(R.string.access_storage_prompt)
+            messagePrompt += if (isSPlus()) {
+                "\n\n${getString(R.string.media_management_alternative)}"
+            } else {
+                "\n\n${getString(R.string.alternative_media_access)}"
+            }
 
+            AllFilesPermissionDialog(this, messagePrompt, callback = { success ->
+                if (success) {
+                    launchGrantAllFilesIntent()
+                }
+            }, neutralPressed = {
+                if (isSPlus()) {
+                    launchMediaManagementIntent(callback)
+                } else {
+                    config.avoidShowingAllFilesPrompt = true
+                }
+            })
+        }
+    } else {
+        callback()
+    }
+}
+
+fun BaseSimpleActivity.launchGrantAllFilesIntent() {
+    try {
+        val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+        intent.addCategory("android.intent.category.DEFAULT")
+        intent.data = Uri.parse("package:$packageName")
+        startActivity(intent)
+    } catch (e: Exception) {
+        val intent = Intent()
+        intent.action = Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
+        try {
+            startActivity(intent)
+        } catch (e: Exception) {
+            showErrorToast(e)
+        }
+    }
+}
+
+fun AppCompatActivity.showSystemUI(toggleActionBarVisibility: Boolean) {
     window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
         View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
         View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
 }
 
 fun AppCompatActivity.hideSystemUI(toggleActionBarVisibility: Boolean) {
-    if (toggleActionBarVisibility) {
-        supportActionBar?.hide()
-    }
-
     window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
         View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
         View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
@@ -245,7 +290,7 @@ fun BaseSimpleActivity.tryCopyMoveFilesTo(fileDirItems: ArrayList<FileDirItem>, 
     }
 
     val source = fileDirItems[0].getParentPath()
-    PickDirectoryDialog(this, source, true, false) {
+    PickDirectoryDialog(this, source, true, false, true, false) {
         val destination = it
         handleSAFDialog(source) {
             if (it) {
@@ -259,7 +304,7 @@ fun BaseSimpleActivity.tryDeleteFileDirItem(
     fileDirItem: FileDirItem, allowDeleteFolder: Boolean = false, deleteFromDatabase: Boolean,
     callback: ((wasSuccess: Boolean) -> Unit)? = null
 ) {
-    deleteFile(fileDirItem, allowDeleteFolder) {
+    deleteFile(fileDirItem, allowDeleteFolder, isDeletingMultipleFiles = false) {
         if (deleteFromDatabase) {
             ensureBackgroundThread {
                 deleteDBPath(fileDirItem.path)
@@ -319,7 +364,7 @@ fun BaseSimpleActivity.movePathsInRecycleBin(paths: ArrayList<String>, callback:
                         mediaDB.updateDeleted("$RECYCLE_BIN$source", System.currentTimeMillis(), source)
                         pathsCnt--
 
-                        if (config.keepLastModified) {
+                        if (config.keepLastModified && lastModified != 0L) {
                             internalFile.setLastModified(lastModified)
                         }
                     }
@@ -340,13 +385,36 @@ fun BaseSimpleActivity.restoreRecycleBinPath(path: String, callback: () -> Unit)
 fun BaseSimpleActivity.restoreRecycleBinPaths(paths: ArrayList<String>, callback: () -> Unit) {
     ensureBackgroundThread {
         val newPaths = ArrayList<String>()
+        var shownRestoringToPictures = false
         for (source in paths) {
-            val destination = source.removePrefix(recycleBinPath)
+            var destination = source.removePrefix(recycleBinPath)
+
+            val destinationParent = destination.getParentPath()
+            if (isRestrictedWithSAFSdk30(destinationParent) && !isInDownloadDir(destinationParent)) {
+                // if the file is not writeable on SDK30+, change it to Pictures
+                val picturesDirectory = getPicturesDirectoryPath(destination)
+                destination = File(picturesDirectory, destination.getFilenameFromPath()).path
+                if (!shownRestoringToPictures) {
+                    toast(getString(R.string.restore_to_path, humanizePath(picturesDirectory)))
+                    shownRestoringToPictures = true
+                }
+            }
+
             val lastModified = File(source).lastModified()
 
             val isShowingSAF = handleSAFDialog(destination) {}
             if (isShowingSAF) {
                 return@ensureBackgroundThread
+            }
+
+            val isShowingSAFSdk30 = handleSAFDialogSdk30(destination) {}
+            if (isShowingSAFSdk30) {
+                return@ensureBackgroundThread
+            }
+
+            if (getDoesFilePathExist(destination)) {
+                val newFile = getAlternativeFile(File(destination))
+                destination = newFile.path
             }
 
             var inputStream: InputStream? = null
@@ -367,11 +435,11 @@ fun BaseSimpleActivity.restoreRecycleBinPaths(paths: ArrayList<String>, callback
                 out?.flush()
 
                 if (File(source).length() == copiedSize) {
-                    mediaDB.updateDeleted(destination.removePrefix(recycleBinPath), 0, "$RECYCLE_BIN$destination")
+                    mediaDB.updateDeleted(destination.removePrefix(recycleBinPath), 0, "$RECYCLE_BIN${source.removePrefix(recycleBinPath)}")
                 }
                 newPaths.add(destination)
 
-                if (config.keepLastModified) {
+                if (config.keepLastModified && lastModified != 0L) {
                     File(destination).setLastModified(lastModified)
                 }
             } catch (e: Exception) {
@@ -397,7 +465,7 @@ fun BaseSimpleActivity.emptyTheRecycleBin(callback: (() -> Unit)? = null) {
         try {
             recycleBin.deleteRecursively()
             mediaDB.clearRecycleBin()
-            directoryDao.deleteRecycleBin()
+            directoryDB.deleteRecycleBin()
             toast(R.string.recycle_bin_emptied)
             callback?.invoke()
         } catch (e: Exception) {
@@ -449,7 +517,7 @@ fun AppCompatActivity.fixDateTaken(
     callback: (() -> Unit)? = null
 ) {
     val BATCH_SIZE = 50
-    if (showToasts) {
+    if (showToasts && !hasRescanned) {
         toast(R.string.fixing)
     }
 
@@ -620,7 +688,8 @@ fun Activity.tryRotateByExif(path: String, degrees: Int, showToasts: Boolean, ca
             false
         }
     } catch (e: Exception) {
-        if (showToasts) {
+        // lets not show IOExceptions, rotating is saved just fine even with them
+        if (showToasts && e !is IOException) {
             showErrorToast(e)
         }
         false
@@ -628,7 +697,7 @@ fun Activity.tryRotateByExif(path: String, degrees: Int, showToasts: Boolean, ca
 }
 
 fun Activity.fileRotatedSuccessfully(path: String, lastModified: Long) {
-    if (config.keepLastModified) {
+    if (config.keepLastModified && lastModified != 0L) {
         File(path).setLastModified(lastModified)
         updateLastModified(path, lastModified)
     }
@@ -709,5 +778,17 @@ fun Activity.showFileOnMap(path: String) {
         showLocationOnMap("${latLon[0]}, ${latLon[1]}")
     } else {
         toast(R.string.unknown_location)
+    }
+}
+
+fun Activity.handleExcludedFolderPasswordProtection(callback: () -> Unit) {
+    if (config.isExcludedPasswordProtectionOn) {
+        SecurityDialog(this, config.excludedPasswordHash, config.excludedProtectionType) { _, _, success ->
+            if (success) {
+                callback()
+            }
+        }
+    } else {
+        callback()
     }
 }
